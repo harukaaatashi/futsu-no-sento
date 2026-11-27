@@ -232,3 +232,46 @@ dialog dd { line-height: 1.65; }
   .dlg-credit { padding: var(--s2) var(--s6) 0; }
   dialog dl > div { grid-template-columns: 9em 1fr; gap: var(--s4); }
 }
+
+/* 空白地帯マップ */
+.big { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s4); margin-top: var(--s4); font-family: var(--maru); font-weight: 900; }
+.big b { font-size: 88px; line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
+.big b small { font-size: 0.45em; }
+.big span { font-size: var(--t-l); line-height: 1.4; }
+.split { display: flex; height: var(--s6); margin-top: var(--s5); border: 2px solid var(--ink); }
+.split i { background: var(--blue); }
+.split em { flex: 1; background: var(--oke); }
+.split-key { display: flex; justify-content: space-between; gap: var(--s4); margin-top: var(--s2); font-size: var(--t-s); line-height: 1.5; }
+.split-key b { font-family: var(--maru); }
+.split-key span:last-child { text-align: right; }
+#gapmap { height: 72vh; min-height: 420px; max-height: 760px; margin-top: var(--s6); border: 2px solid var(--ink); background: var(--grout); font: inherit; font-size: var(--t-s); z-index: 0; }
+#gapmap .leaflet-popup-content { margin: var(--s3) var(--s4); font-size: var(--t-s); line-height: 1.6; color: var(--ink); }
+#gapmap .leaflet-popup-content-wrapper, #gapmap .leaflet-tooltip { border-radius: var(--s1); }
+.map-error { position: absolute; inset: 0; z-index: 500; display: grid; place-items: center; padding: var(--s4); background: var(--paper); }
+.map-key { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-top: var(--s3); font-size: var(--t-s); color: var(--sub); }
+.map-key li { display: flex; align-items: center; gap: var(--s2); }
+.map-key i { width: var(--s4); height: var(--s4); border: 1px solid var(--sub); }
+.map-key .k-in { background: rgba(36, 104, 173, 0.22); }
+.map-key .k-out { background: linear-gradient(90deg, rgba(244, 170, 20, 0.3), rgba(244, 170, 20, 0.95)); width: var(--s10); }
+.map-key .k-dot { border-radius: 50%; background: var(--noren); border-color: var(--paper); outline: 1px solid var(--noren); width: var(--s3); height: var(--s3); }
+.towns { margin-top: var(--s5); border-top: 2px solid var(--ink); }
+.towns li { border-bottom: 1px solid var(--grout); }
+.towns button { appearance: none; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; display: grid; grid-template-columns: 6.5em 1fr; gap: var(--s1) var(--s4); align-items: center; padding: var(--s3) 0; }
+.towns button:hover strong { text-decoration: underline; }
+.towns strong { font-family: var(--maru); }
+.towns .out { text-align: right; font-size: var(--t-s); font-variant-numeric: tabular-nums; grid-column: 2; }
+.towns .out b { font-family: var(--maru); font-size: var(--t-m); }
+.towns .bar { grid-column: 1 / -1; display: flex; height: var(--s2); background: var(--oke); }
+.towns .bar i { background: var(--blue); }
+details.more { margin-top: var(--s4); }
+details.more summary { cursor: pointer; font-family: var(--maru); font-weight: 700; color: var(--blue); }
+.caveats { margin-top: var(--s4); display: grid; gap: var(--s3); }
+.caveats li { padding-left: var(--s5); position: relative; max-width: 40em; }
+.caveats li::before { content: ""; position: absolute; left: 0; top: 0.7em; width: var(--s2); height: var(--s2); background: var(--oke); }
+@media (min-width: 760px) {
+  .big b { font-size: 128px; }
+  .towns button { grid-template-columns: 8em 1fr 11em; }
+  .towns .bar { grid-column: 2; grid-row: 1; height: var(--s3); }
+  .towns .out { grid-column: 3; }
+}
+.cta { margin-top: var(--s5); }

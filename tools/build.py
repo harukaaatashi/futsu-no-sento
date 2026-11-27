@@ -1,7 +1,7 @@
 """ページを作り直す。リポジトリのいちばん上で `python3 tools/build.py` を実行する。
 
 読むもの: actions.md、data/ideas.json、data/cases.json
-作るもの: index.html、idea-01.html から idea-10.html、players.md
+作るもの: index.html、idea-01.html から idea-10.html、map.html、players.md
 """
 import html, json, re
 from pathlib import Path
@@ -181,11 +181,11 @@ clues = [
 ]
 clue_html = ''.join(f'<li><svg class="icon" aria-hidden="true"><use href="#{ic}"/></svg><strong>{t}</strong><p>{d}</p></li>' for ic, t, d in clues)
 now = [
-    ('はるか', '銭湯のマップを作ってみる', 'なくなりそうな、いい銭湯を探すためでもあります。', 'idea-04.html'),
+    ('はるか', '銭湯のマップを作ってみる', 'まず東京の分を作りました。なくなりそうな、いい銭湯を探すためでもあります。', 'map.html'),
     ('なる', 'クラブ銭湯をつくる', '会社の部活として、共通の入浴券でいろいろな銭湯を回り、風呂上がりに話します。', 'idea-10.html'),
     ('なる', '支える相手を深掘りする', 'どういう銭湯を、どういう人たちを支えるのかを、もう少し具体的にします。', ''),
 ]
-now_html = ''.join(f'<li><span class="by">{w}</span><strong>{t}</strong><p>{d}</p>' + (f'<a class="go" href="{h}">関わる案を見る{ARROW}</a>' if h else '') + '</li>' for w, t, d, h in now)
+now_html = ''.join(f'<li><span class="by">{w}</span><strong>{t}</strong><p>{d}</p>' + (f'<a class="go" href="{h}">{"地図を見る" if h == "map.html" else "関わる案を見る"}{ARROW}</a>' if h else '') + '</li>' for w, t, d, h in now)
 steps = ''.join(f'<li><span class="when"><b>{m[0]}</b>か月目</span><strong>{m[1]}</strong><p>{m[2]}</p></li>' for m in months)
 gallery = ''.join(
     f'<figure><img src="{C}{f}/960px-{f.split("/")[-1]}" alt="{e(alt)}" loading="lazy" width="960" height="720">'
@@ -300,6 +300,7 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
     <h2>何で測るか</h2>
     <p>アプリの利用者数やフォロワー数では測りません。</p>
     <ul class="measure"><li>減らせた労働時間</li><li>減らせた経費</li><li>続けられた銭湯の数</li><li>自転車10分圏内で銭湯に行ける人の割合</li></ul>
+    <p class="note">4つ目は、東京の分を<a href="map.html">空白地帯マップ</a>で数えはじめました。</p>
   </section>
 
   <footer>もとの文章は<a href="https://github.com/harukaaatashi/futsu-no-sento">GitHubのリポジトリ</a>にあります。</footer>
@@ -380,12 +381,14 @@ for n, i in enumerate(ideas):
     <p class="talk">{e(i["talk"])}</p>
     <p class="note">2026年11月27日に話した中身です。</p>
   </section>''' if i.get('talk') else ''
+    extra = f'<p class="cta"><a class="btn primary" href="map.html">東京の地図を見る{ARROW}</a></p>' if i['id'] == '04' else ''
     page = head(f'{i["name"]}｜普通の銭湯研究所', i['one']) + f'''
   <a class="brand" href="index.html">普通の銭湯研究所</a>
   <nav class="crumb" aria-label="いまいる場所"><a href="index.html">全体</a>{ARROW}<a href="index.html#ideas">10個の案</a>{ARROW}<span>{e(i["name"])}</span></nav>
   <div class="idea-head">
     <h1>{e(i["name"])}</h1>
     <p class="lead">{e(i["what"])}</p>
+    {extra}
     <a class="of-branch" href="index.html#b{i["branch"]}"><span class="mark">{i["branch"]}</span><span>{e(branch_name[i["branch"]])}ための案</span></a>
   </div>
   <div class="facts">
@@ -423,6 +426,74 @@ for n, i in enumerate(ideas):
 </html>
 '''
     (ROOT / f'idea-{i["id"]}.html').write_text(page, encoding='utf-8')
+
+# ---------- 空白地帯マップ ----------
+mp = ROOT / 'data/map/summary.json'
+if mp.exists():
+    S = json.loads(mp.read_text(encoding='utf-8'))
+    pct = S['in'] / S['pop'] * 100
+
+    def man(n):
+        return f'{round(n / 10000):,}万'
+
+    def town_row(t):
+        share = t['in'] / t['pop'] * 100
+        return (f'<li><button type="button" data-fly="{t["lat"]},{t["lon"]}"><strong>{e(t["name"])}</strong>'
+                f'<span class="bar" role="img" aria-label="10分圏内に住む人は{share:.0f}%"><i style="width:{share:.1f}%"></i></span>'
+                f'<span class="out">圏外に<b>{t["pop"] - t["in"]:,}</b>人、圏内は{share:.0f}%</span></button></li>')
+
+    top = ''.join(town_row(t) for t in S['towns'][:10])
+    rest = ''.join(town_row(t) for t in S['towns'][10:])
+    page = head('空白地帯マップ｜普通の銭湯研究所', f'東京で、自転車10分以内に銭湯がある人は{pct:.0f}%。圏外に人が多い場所を地図にしました。').replace(
+        '<link rel="stylesheet" href="assets/style.css">',
+        '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">\n<link rel="stylesheet" href="assets/style.css">') + f'''
+  <a class="brand" href="index.html">普通の銭湯研究所</a>
+  <nav class="crumb" aria-label="いまいる場所"><a href="index.html">全体</a>{ARROW}<a href="idea-04.html">空白地帯マップ</a>{ARROW}<span>東京</span></nav>
+  <div class="idea-head">
+    <h1><span>東京で、</span><span>自転車10分以内に</span><span>銭湯がある人は</span></h1>
+    <p class="big"><b>{pct:.0f}<small>%</small></b><span>残りの{man(S["out"])}人は、<br>10分では着きません。</span></p>
+    <div class="split" role="img" aria-label="圏内が{pct:.0f}%、圏外が{100 - pct:.0f}%"><i style="width:{pct:.1f}%"></i><em></em></div>
+    <p class="split-key"><span><b>圏内</b> {man(S["in"])}人</span><span><b>圏外</b> {man(S["out"])}人</span></p>
+  </div>
+
+  <section class="sec">
+    <h2>どこが空いているか</h2>
+    <p>黄色いところが、銭湯まで10分では着かない人が住んでいる場所です。色が濃いほど、人が多く住んでいます。地図を押すと、その場所の人数と、いちばん近い銭湯がわかります。</p>
+    <div id="gapmap" role="application" aria-label="東京の銭湯と、10分圏の内と外に住む人の地図"></div>
+    <ul class="map-key" aria-label="地図の見方">
+      <li><i class="k-dot"></i>銭湯</li>
+      <li><i class="k-in"></i>10分圏内に人が住んでいる</li>
+      <li><i class="k-out"></i>10分圏の外に人が住んでいる。濃いほど多い</li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <h2>圏外の人が多い区と市</h2>
+    <p>圏外に住む人が多い順に並べました。青が圏内、黄色が圏外です。押すと、地図がその場所に動きます。</p>
+    <ol class="towns">{top}</ol>
+    <details class="more"><summary>残りの{len(S["towns"]) - 10}の区市町村も見る</summary><ol class="towns">{rest}</ol></details>
+  </section>
+
+  <section class="sec">
+    <h2>数え方と、まだ粗いところ</h2>
+    <ul class="caveats">
+      <li>自転車で10分を、直線で1.5kmと置きました。時速12kmで走ると道のりは2kmで、道は直線より3割ほど遠回りになる、という仮の計算です。坂や川、線路は見ていません。</li>
+      <li>人口は、2020年の国勢調査を250m四方に区切ったものです。島は入れていません。</li>
+      <li>都内の銭湯は、東京都浴場組合の東京銭湯マップに載っている{S["sento_tokyo"]}軒です。組合に入っていない銭湯は入っていません。2026年11月28日に読みました。</li>
+      <li>都の外の銭湯は、OpenStreetMapにある{S["sento_around"]}軒を使いました。都内の一覧より抜けが多く、県境の近くでは圏外が多めに出ているはずです。</li>
+      <li>いい銭湯かどうか、これからも続きそうかどうかは、まだ見ていません。ここにあるのは距離だけです。</li>
+    </ul>
+    <p class="note">出どころは、<a href="https://www.e-stat.go.jp/gis">e-Statの地図で見る統計</a>、<a href="https://www.1010.or.jp/map/">東京銭湯マップ</a>、<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>、<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>です。</p>
+  </section>
+
+  <footer><a href="index.html">全体のページに戻る</a></footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="assets/map.js"></script>
+</body>
+</html>
+'''
+    (ROOT / 'map.html').write_text(page, encoding='utf-8')
 
 # ---------- 文章で読む版 ----------
 md = ['# 先にやっている人', '', '10 個の案ごとに、すでに取り組んでいる人や会社を調べました。2026 年 11 月に、公開されている資料を検索して集めたものです。見つからなかったことは、だれもやっていないことの証明ではありません。', '',

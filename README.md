@@ -19,7 +19,7 @@ https://harukaaatashi.github.io/futsu-no-sento/
 
 2026 年 11 月 27 日に 2 人で話して決めました。くわしくは [notes/2026-11-27.md](notes/2026-11-27.md) にあります。
 
-- はるか: 銭湯のマップを作ってみる
+- はるか: 銭湯のマップを作ってみる。東京の分は[空白地帯マップ](https://harukaaatashi.github.io/futsu-no-sento/map.html)にしました
 - なる: 会社の部活として、クラブ銭湯をつくる
 - なる: 支える相手を深掘りする
 - 毎週金曜日に、進み具合を話す
@@ -69,6 +69,15 @@ https://harukaaatashi.github.io/futsu-no-sento/
 - [players.md](players.md): 案ごとに、先にやっている人を調べた結果
 - [first-3-months.md](first-3-months.md): 最初の 3 か月でやること
 - [notes](notes): 話したことのメモ
+
+## 空白地帯マップ
+
+東京都の本土で、自転車 10 分以内に銭湯がある人の割合を数えました。2026 年 11 月 28 日の時点で 78% です。残りの 305 万人は、八王子市、町田市、日野市など多摩に多く住んでいます。
+
+- 自転車 10 分は、直線で 1.5km と仮に置いています
+- 人口は 2020 年の国勢調査の 250m メッシュ（e-Stat）
+- 都内の銭湯は東京都浴場組合の東京銭湯マップにある 404 軒、都の外は OpenStreetMap
+- 作り直すときは `tools/fetch_tokyo_sento.py`、`tools/build_map.py`、`tools/build.py` の順に実行します。元データはリポジトリに入れていません。入手先は `tools/build_map.py` の先頭に書いてあります
 
 ## ページの作り
 
