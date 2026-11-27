@@ -122,26 +122,51 @@ plist = ''.join(
     for i in ideas)
 # 2つの軸の上に10個の案を置く。印の形で、先にやっている人の多さも見せる
 PCLASS = {'見つからず': 'p-none', '一部にいる': 'p-some', '多い': 'p-many'}
-map_rows = ''
-for ease in range(5, 0, -1):
-    cells = ''
-    for eff in range(1, 6):
-        here = ''.join(f'<a class="pin {PCLASS[i["players"]]}" href="idea-{i["id"]}.html"><b>{int(i["id"])}</b><span>{e(i["name"])}</span></a>' for i in ideas if i['effect'] == eff and i['ease'] == ease)
-        cells += f'<td class="{"good" if eff >= 4 and ease >= 4 else ""}">{here}</td>'
-    map_rows += f'<tr><th scope="row">{ease}</th>{cells}</tr>'
-idea_map = f'''<figure class="map">
-      <p class="axis-y"><span>始めやすい</span><span>始めにくい</span></p>
-      <table>
-        <caption>10個の案を、業界への効果と始めやすさで並べた図</caption>
-        <tbody>{map_rows}</tbody>
-        <tfoot><tr><td></td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></tfoot>
+NUM = [1, 2, 3, 4, 5]
+AXES = {
+    # 値を小さいほうから並べる。good は「よいところ」に入る値
+    'effect': dict(key='effect', values=NUM, ticks=NUM, low='効果が小さい', high='効果が大きい', good=(4, 5), word='効果が大きい'),
+    'ease': dict(key='ease', values=NUM, ticks=NUM, low='始めにくい', high='始めやすい', good=(4, 5), word='始めやすい'),
+    'players': dict(key='players', values=['多い', '一部にいる', '見つからず'], ticks=['多い', '一部にいる', '見つからず'], low='先にやっている人が多い', high='見つからない', good=('見つからず',), word='先にやっている人が見つからない'),
+}
+# 切り替えの名前, 横の軸, 縦の軸, よいところの説明
+VIEWS = [
+    ('効果と始めやすさ', 'effect', 'ease', '始めやすくて、効果も大きいところ'),
+    ('効果と先にやっている人', 'players', 'effect', '効果が大きくて、先にやっている人が見つからないところ'),
+    ('始めやすさと先にやっている人', 'players', 'ease', '始めやすくて、先にやっている人が見つからないところ'),
+]
+
+
+def make_map(n, title, xk, yk, good_text):
+    x, y = AXES[xk], AXES[yk]
+    rows = ''
+    for yv, yt in reversed(list(zip(y['values'], y['ticks']))):
+        cells = ''
+        for xv in x['values']:
+            here = ''.join(f'<a class="pin {PCLASS[i["players"]]}" href="idea-{i["id"]}.html"><b>{int(i["id"])}</b><span>{e(i["name"])}</span></a>' for i in ideas if i[x['key']] == xv and i[y['key']] == yv)
+            cells += f'<td class="{"good" if xv in x["good"] and yv in y["good"] else ""}">{here}</td>'
+        rows += f'<tr><th scope="row">{yt}</th>{cells}</tr>'
+    foot = ''.join(f'<th scope="col">{t}</th>' for t in x['ticks'])
+    return f'''<div class="map-view" id="map-{n}"{"" if n == 0 else " hidden"}>
+      <p class="axis-y"><span>{y["high"]}</span><span>{y["low"]}</span></p>
+      <table aria-label="10個の案を、{title}で並べた図">
+        <colgroup><col class="c-head"><col span="{len(x["values"])}"></colgroup>
+        <tbody>{rows}</tbody>
+        <tfoot><tr><td></td>{foot}</tr></tfoot>
       </table>
-      <p class="axis-x"><span>効果が小さい</span><span>効果が大きい</span></p>
+      <p class="axis-x"><span>{x["low"]}</span><span>{x["high"]}</span></p>
+      <p class="zone"><span class="swatch"></span>{good_text}</p>
+    </div>'''
+
+
+switch = ''.join(f'<button class="seg" type="button" aria-pressed="{"true" if n == 0 else "false"}" data-map="map-{n}">{v[0]}</button>' for n, v in enumerate(VIEWS))
+idea_map = f'''<figure class="map">
+      <div class="switch" role="group" aria-label="図の軸を選ぶ">{switch}</div>
+      {''.join(make_map(n, *v) for n, v in enumerate(VIEWS))}
       <ul class="legend" aria-label="印の見方">
         <li><span class="pin p-none"><b>1</b></span>先にやっている人が見つからない</li>
         <li><span class="pin p-some"><b>1</b></span>一部にいる</li>
         <li><span class="pin p-many"><b>1</b></span>多い</li>
-        <li><span class="swatch"></span>始めやすくて、効果も大きいところ</li>
       </ul>
     </figure>'''
 steps = ''.join(f'<li><span class="when"><b>{m[0]}</b>か月目</span><strong>{m[1]}</strong><p>{m[2]}</p></li>' for m in months)
@@ -221,7 +246,7 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
 
   <section class="sec" id="ideas">
     <h2>10個の案と、先にやっている人</h2>
-    <p>右上にあるほど、始めやすくて効果も大きい案です。印が青く塗ってあるものは、先にやっている人が見つからなかった案です。番号は、下の一覧の番号と同じです。案を押すと、調べた事例が写真つきで見られます。点数は、現場の話を聞く前の仮のものです。</p>
+    <p>どの図も、右上にあるほどよい案です。上のボタンで、図の軸を切り替えられます。印が青く塗ってあるものは、先にやっている人が見つからなかった案です。番号は、下の一覧の番号と同じです。案を押すと、調べた事例が写真つきで見られます。点数は、現場の話を聞く前の仮のものです。</p>
     {idea_map}
     <ol class="plist">{plist}</ol>
   </section>
@@ -240,6 +265,16 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
   <footer>もとの文章は<a href="https://github.com/harukaaatashi/futsu-no-sento">GitHubのリポジトリ</a>にあります。</footer>
 </main>
 <script>
+// 図の軸を切り替える
+var segs = document.querySelectorAll(".seg");
+segs.forEach(function (seg) {{
+  seg.addEventListener("click", function () {{
+    segs.forEach(function (s) {{
+      s.setAttribute("aria-pressed", s === seg ? "true" : "false");
+      document.getElementById(s.dataset.map).hidden = s !== seg;
+    }});
+  }});
+}});
 // タイルを押すと、その枝の下に中身を開く。同じ枝で開くのは1つだけ
 document.querySelectorAll(".branch").forEach(function (branch) {{
   var tiles = branch.querySelectorAll(".tile");

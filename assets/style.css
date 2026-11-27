@@ -74,13 +74,18 @@ figcaption { font-size: var(--t-s); color: var(--sub); line-height: 1.6; margin-
 .related { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); margin-top: var(--s3); font-size: var(--t-s); color: var(--sub); }
 
 /* 2つの軸の図 */
-.map { margin-top: var(--s8); display: grid; grid-template-columns: auto 1fr; gap: var(--s2); }
+.map { margin-top: var(--s8); }
+.switch { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s5); }
+.seg { appearance: none; border: 2px solid var(--blue); background: var(--paper); color: var(--ink); font: inherit; font-family: var(--maru); font-weight: 700; font-size: var(--t-s); line-height: 1.3; padding: var(--s2) var(--s4); border-radius: var(--s6); cursor: pointer; }
+.seg[aria-pressed="true"] { background: var(--blue); color: var(--paper); }
+.map-view { display: grid; grid-template-columns: auto 1fr; gap: var(--s2); }
+.map-view[hidden] { display: none; }
+.zone { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--s2); font-size: var(--t-xs); color: var(--sub); margin-top: var(--s2); }
 .map table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-.map caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .map td { border: 1px solid var(--grout); height: 72px; padding: var(--s1); text-align: center; vertical-align: middle; }
 .map td.good { background: var(--water); }
 .map th { font-weight: 400; font-size: var(--t-xs); color: var(--sub); font-variant-numeric: tabular-nums; }
-.map tbody th { width: 20px; }
+.map col.c-head { width: 24px; }
 .map tfoot td { border: 0; height: auto; }
 .map tfoot th { padding-top: var(--s1); }
 .axis-y { writing-mode: vertical-rl; display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--sub); line-height: 1; padding-bottom: var(--s8); }
@@ -96,7 +101,7 @@ a.pin:hover { text-decoration: underline; }
 .legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-top: var(--s3); font-size: var(--t-xs); color: var(--sub); }
 .legend li { display: flex; align-items: center; gap: var(--s2); }
 .legend .pin { margin: 0; }
-.swatch { width: 28px; height: 20px; background: var(--water); border: 1px solid var(--grout); }
+.swatch { flex: none; width: 28px; height: 20px; background: var(--water); border: 1px solid var(--grout); }
 .plist { margin-top: var(--s12); }
 
 /* 10個の案の一覧 */
