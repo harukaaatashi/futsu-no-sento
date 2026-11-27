@@ -14,6 +14,8 @@
 
   function km(m) { return m < 1000 ? m + "m" : (m / 1000).toFixed(1) + "km"; }
   function num(n) { return n.toLocaleString("ja-JP"); }
+  // 銭湯の名前は外から取ったデータなので、HTMLとして働かないようにしてから出す
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
   Promise.all([
     fetch("data/map/cells.json").then(function (r) { return r.json(); }),
@@ -51,11 +53,11 @@
     var dots = L.canvas({ padding: 0.3 });
     sento.forEach(function (s) {
       L.circleMarker([s[0], s[1]], { renderer: dots, radius: 4, color: "#fff", weight: 1.5, fillColor: "#1b3358", fillOpacity: 1 })
-        .bindTooltip(s[2]).addTo(map)
+        .bindTooltip(esc(s[2])).addTo(map)
         .on("click", function (ev) {
           L.DomEvent.stop(ev);
           ring.setLatLng([s[0], s[1]]).addTo(map);
-          L.popup().setLatLng([s[0], s[1]]).setContent("<strong>" + s[2] + "</strong><br>円は、ここから直線で1.5kmです。").openOn(map);
+          L.popup().setLatLng([s[0], s[1]]).setContent("<strong>" + esc(s[2]) + "</strong><br>円は、ここから直線で1.5kmです。").openOn(map);
         });
     });
     var ring = L.circle([0, 0], { radius: RADIUS, color: "#1b3358", weight: 2, dashArray: "6 6", fill: false, interactive: false });
@@ -68,7 +70,7 @@
       ring.setLatLng([s[0], s[1]]).addTo(map);
       L.popup().setLatLng(ev.latlng).setContent(
         "<strong>" + (v[3] <= RADIUS ? "10分圏内" : "10分圏の外") + "</strong><br>この250m四方に住む人は" + num(v[2]) +
-        "人。<br>いちばん近いのは" + s[2] + "で、直線で" + km(v[3]) + "です。").openOn(map);
+        "人。<br>いちばん近いのは" + esc(s[2]) + "で、直線で" + km(v[3]) + "です。").openOn(map);
     });
 
     document.querySelectorAll("[data-fly]").forEach(function (b) {
