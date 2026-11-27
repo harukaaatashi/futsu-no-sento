@@ -4,124 +4,227 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>普通の銭湯研究所</title>
-<meta name="description" content="日本中の誰もが、自転車で10分以内に、いい普通の銭湯に行ける世界をつくる。そのために要ることの整理。">
+<meta name="description" content="日本中の誰もが、自転車で10分以内に、いい普通の銭湯に行ける世界をつくる。そのために要ることを、絵と図で整理しました。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink: #1b1d1f; --sub: #5f666d; --line: #d5d9dd; --wash: #f3f5f6; --paper: #ffffff; --accent: #1d5c85;
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px; --s12: 48px; --s16: 64px;
-  --t-xs: 12px; --t-s: 14px; --t-m: 16px; --t-l: 20px; --t-xl: 28px; --t-xxl: 40px;
+  /* 銭湯の色: タイルの白、目地、ペンキ絵の青、のれんの藍、桶の黄 */
+  --ink: #1c2530; --sub: #56616d; --paper: #ffffff; --grout: #dfe6ea; --water: #d8ebf7; --blue: #2468ad; --noren: #1b3358; --oke: #f4c53a;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px; --s16: 64px; --s24: 96px;
+  --t-xs: 13px; --t-s: 15px; --t-m: 17px; --t-l: 22px; --t-xl: 30px; --t-xxl: 44px;
+  --maru: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; font-size: var(--t-m); line-height: 1.7; line-break: strict; word-break: auto-phrase; text-autospace: normal; -webkit-text-size-adjust: 100%; }
-main { max-width: 1280px; margin: 0 auto; padding: var(--s12) var(--s4) var(--s16); }
-h1, h2, h3, p, ul, ol { margin: 0; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; font-size: var(--t-m); line-height: 1.75; line-break: strict; word-break: auto-phrase; text-autospace: normal; -webkit-text-size-adjust: 100%; }
+main { max-width: 1040px; margin: 0 auto; padding: var(--s8) var(--s4) var(--s24); }
+h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
 ul, ol { padding: 0; list-style: none; }
-a { color: var(--accent); }
-a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.label { font-size: var(--t-s); color: var(--sub); }
-h1 { font-size: var(--t-xl); line-height: 1.4; font-weight: 700; text-wrap: balance; max-width: 22em; margin-top: var(--s2); }
-h1 em { font-style: normal; color: var(--accent); }
+h1, h2, h3, .brand, .p-name strong, .steps strong, .tile-t { font-family: var(--maru); }
+a { color: var(--blue); }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+svg { display: block; }
+.defs { position: absolute; width: 0; height: 0; }
+.sec { margin-top: var(--s24); }
+h2 { font-size: var(--t-xl); line-height: 1.35; font-weight: 900; text-wrap: balance; }
+.sec > p { color: var(--sub); max-width: 34em; margin-top: var(--s3); }
+
+/* のれんの形の名札 */
+.brand { display: inline-block; background: var(--noren); color: var(--paper); font-weight: 700; font-size: var(--t-s); line-height: 1; padding: var(--s3) var(--s4) var(--s4); clip-path: polygon(0 0, 100% 0, 100% 100%, 67% 100%, 67% 62%, 65% 62%, 65% 100%, 35% 100%, 35% 62%, 33% 62%, 33% 100%, 0 100%); }
+.hero { display: grid; gap: var(--s6); align-items: center; margin-top: var(--s6); }
+h1 { font-size: var(--t-xl); line-height: 1.4; font-weight: 900; }
 h1 span { display: inline-block; }
-.lead { color: var(--sub); max-width: 36em; margin-top: var(--s4); }
-h2 { font-size: var(--t-l); line-height: 1.4; margin-top: var(--s16); padding-top: var(--s4); border-top: 1px solid var(--ink); }
-h2 + p { color: var(--sub); max-width: 40em; margin-top: var(--s2); }
+.lead { margin-top: var(--s4); max-width: 26em; }
+figcaption { font-size: var(--t-s); color: var(--sub); line-height: 1.6; margin-top: var(--s3); }
 
-/* ツリー: 狭い画面では縦に積み、左の線でつなぐ */
-.root { display: inline-block; margin-top: var(--s8); padding: var(--s2) var(--s4); background: var(--ink); color: var(--paper); font-weight: 700; font-size: var(--t-s); }
-.branches { margin-left: var(--s4); padding-top: var(--s4); border-left: 1px solid var(--ink); display: grid; gap: var(--s8); }
-.branch { position: relative; padding-left: var(--s6); min-width: 0; }
-.branch::before { content: ""; position: absolute; left: 0; top: 14px; width: var(--s4); border-top: 1px solid var(--ink); }
-.branch h3 { font-size: var(--t-m); line-height: 1.5; display: flex; gap: var(--s2); align-items: baseline; }
-.num { color: var(--accent); font-variant-numeric: tabular-nums; }
-details { margin-top: var(--s3); border-top: 1px solid var(--line); padding-top: var(--s2); }
-summary { cursor: pointer; font-size: var(--t-s); font-weight: 700; display: flex; justify-content: space-between; gap: var(--s2); list-style: none; }
-summary::-webkit-details-marker { display: none; }
-.count { color: var(--sub); font-weight: 400; font-variant-numeric: tabular-nums; }
-details ul { margin-top: var(--s1); }
-details li { font-size: var(--t-s); line-height: 1.6; color: var(--sub); padding: var(--s1) 0; }
+/* 絵と図に共通の線 */
+.pic { width: 100%; height: auto; fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.pic text { stroke: none; fill: var(--ink); font-family: var(--maru); font-weight: 700; }
+.ring { fill: var(--water); stroke: var(--blue); stroke-width: 3; stroke-dasharray: 1 10; }
+.house path:first-child { fill: var(--paper); }
+.far { stroke: var(--sub); stroke-dasharray: 4 5; stroke-width: 2.5; }
+.route { stroke-dasharray: 7 7; }
+.f-paper { fill: var(--paper); } .f-noren { fill: var(--noren); } .f-blue { fill: var(--blue); } .f-water { fill: var(--water); } .f-oke { fill: var(--oke); }
+.s-blue { stroke: var(--blue); } .s-paper { stroke: var(--paper); } .s-sub { stroke: var(--sub); stroke-width: 2.5; }
+.pic .on-dark { fill: var(--paper); } .pic .cap { fill: var(--sub); font-family: inherit; font-weight: 400; }
+.pic .halo { stroke: var(--paper); stroke-width: 6; paint-order: stroke; }
+.mk { fill: var(--oke); stroke-width: 2; }
+.pic .mk-n { font-size: 13px; font-weight: 900; text-anchor: middle; dominant-baseline: central; }
 
-/* 始めやすさと効果の表 */
-.where { display: grid; gap: var(--s8); margin-top: var(--s6); }
-.plot { max-width: 440px; }
-table { border-collapse: collapse; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
-td { border: 1px solid var(--line); height: 64px; padding: var(--s1); text-align: center; vertical-align: middle; }
-th { font-weight: 400; font-size: var(--t-xs); color: var(--sub); width: 24px; }
-tfoot th { height: 24px; width: auto; }
-.axis { font-size: var(--t-xs); color: var(--sub); margin-top: var(--s2); }
-.chip { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin: 2px; background: var(--accent); color: var(--paper); font-size: var(--t-xs); font-weight: 700; line-height: 1; text-decoration: none; font-variant-numeric: tabular-nums; flex: none; }
-.plist { display: grid; gap: var(--s3); }
-.plist li { display: flex; gap: var(--s3); align-items: flex-start; scroll-margin-top: var(--s4); }
-.plist li:target strong { color: var(--accent); }
-.plist strong { display: block; line-height: 28px; }
-.plist p { font-size: var(--t-s); color: var(--sub); line-height: 1.6; }
+.tub { display: grid; gap: var(--s6); margin-top: var(--s8); align-items: center; }
+.tub-fig { max-width: 520px; }
+.tub-links { display: grid; gap: var(--s2); }
+.tub-links a { display: flex; gap: var(--s3); align-items: center; padding: var(--s2) 0; color: var(--ink); text-decoration: none; font-family: var(--maru); font-weight: 700; border-bottom: 1px solid var(--grout); }
+.tub-links a:hover span:last-child { text-decoration: underline; }
+.mark { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--oke); border: 2px solid var(--ink); font-family: var(--maru); font-weight: 900; font-size: var(--t-s); line-height: 1; font-variant-numeric: tabular-nums; }
 
-.steps { display: grid; gap: var(--s6); margin-top: var(--s6); }
-.steps li { border-top: 4px solid var(--accent); padding-top: var(--s3); }
-.when { display: block; font-size: var(--t-s); color: var(--accent); font-weight: 700; }
-.steps p { font-size: var(--t-s); color: var(--sub); margin-top: var(--s2); }
-.measure { display: grid; gap: var(--s2); margin-top: var(--s4); }
-.measure li { padding: var(--s3) var(--s4); background: var(--wash); font-weight: 700; }
-footer { margin-top: var(--s16); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--t-s); color: var(--sub); }
+/* タイルの壁 */
+.branch { margin-top: var(--s12); scroll-margin-top: var(--s4); }
+.branch h3 { display: flex; align-items: center; gap: var(--s3); font-size: var(--t-l); line-height: 1.4; font-weight: 900; }
+.icon { width: 48px; height: 48px; flex: none; fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1); padding: var(--s1); background: var(--grout); border-radius: var(--s2); margin-top: var(--s4); }
+.tile { appearance: none; border: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; background: var(--paper); border-radius: var(--s1); padding: var(--s4); min-height: 112px; display: flex; flex-direction: column; justify-content: space-between; gap: var(--s3); }
+.tile-t { font-weight: 700; line-height: 1.45; }
+.tile-n { display: flex; justify-content: space-between; align-items: center; font-size: var(--t-s); color: var(--sub); font-variant-numeric: tabular-nums; }
+.pm { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.tile:hover { background: var(--water); }
+.tile[aria-expanded="true"] { background: var(--blue); color: var(--paper); }
+.tile[aria-expanded="true"] .tile-n { color: var(--paper); }
+.tile[aria-expanded="true"] .v { display: none; }
+.panel { margin-top: var(--s1); padding: var(--s5) var(--s4); background: var(--water); border-radius: var(--s2); }
+.panel h4 { font-size: var(--t-s); font-weight: 400; color: var(--sub); }
+.panel ul { margin-top: var(--s2); display: grid; gap: var(--s2) var(--s8); }
+.panel li { padding-left: var(--s5); position: relative; line-height: 1.6; }
+.panel li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 8px; height: 8px; background: var(--blue); border-radius: 2px; }
 
-@media (min-width: 720px) {
-  main { padding: var(--s16) var(--s8); }
-  h1 { font-size: var(--t-xxl); }
-  .where { grid-template-columns: 440px 1fr; align-items: start; }
-  .plist { grid-template-columns: 1fr 1fr; column-gap: var(--s6); }
+/* 10個の案 */
+.plist { margin-top: var(--s6); border-top: 2px solid var(--ink); }
+.plist li { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2) var(--s4); padding: var(--s4) 0; border-bottom: 1px solid var(--grout); }
+.p-name { grid-column: 1 / -1; }
+.p-name strong { display: block; font-size: var(--t-m); }
+.p-name p { font-size: var(--t-s); color: var(--sub); line-height: 1.6; }
+.meter { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--s1) var(--s2); font-size: var(--t-xs); color: var(--sub); }
+.meter > span:first-child { grid-column: 1 / -1; }
+.meter b { color: var(--ink); font-size: var(--t-s); font-variant-numeric: tabular-nums; }
+.cells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 2px; background: var(--grout); border-radius: var(--s1); }
+.cells i { height: 16px; background: var(--paper); border-radius: 2px; }
+.cells i.on { background: var(--blue); }
+
+.steps { display: grid; gap: var(--s6); margin-top: var(--s8); }
+.steps li { padding-left: var(--s5); border-left: 4px solid var(--blue); }
+.when { display: block; color: var(--blue); font-family: var(--maru); font-weight: 700; line-height: 1.2; }
+.when b { font-size: var(--t-xxl); font-weight: 900; margin-right: var(--s1); font-variant-numeric: tabular-nums; }
+.steps strong { display: block; font-size: var(--t-m); margin-top: var(--s2); }
+.steps p { font-size: var(--t-s); color: var(--sub); line-height: 1.6; margin-top: var(--s1); }
+.measure { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1); padding: var(--s1); background: var(--grout); border-radius: var(--s2); margin-top: var(--s6); }
+.measure li { background: var(--paper); border-radius: var(--s1); padding: var(--s4); font-family: var(--maru); font-weight: 700; line-height: 1.5; min-height: 96px; display: flex; align-items: flex-end; }
+footer { margin-top: var(--s24); font-size: var(--t-s); color: var(--sub); }
+
+@media (min-width: 760px) {
+  main { padding: var(--s12) var(--s8) var(--s24); }
+  .hero { grid-template-columns: 1fr 1fr; gap: var(--s10); }
+  h1 { font-size: var(--t-xxl); line-height: 1.35; }
+  h2 { font-size: 36px; }
+  .tub { grid-template-columns: minmax(0, 520px) 1fr; gap: var(--s12); }
+  .tiles { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .panel { padding: var(--s6); }
+  .panel ul { grid-template-columns: 1fr 1fr; }
+  .plist li { grid-template-columns: 1fr 180px 180px; align-items: center; gap: var(--s8); }
+  .p-name { grid-column: auto; }
   .steps { grid-template-columns: repeat(3, 1fr); }
-  .measure { grid-template-columns: repeat(4, 1fr); }
-}
-/* 広い画面では、根から5本の枝が横に分かれる */
-@media (min-width: 1100px) {
-  .tree { text-align: center; }
-  .root { position: relative; margin-bottom: var(--s8); }
-  .root::after { content: ""; position: absolute; left: 50%; top: 100%; height: var(--s8); border-left: 1px solid var(--ink); }
-  .branches { position: relative; text-align: left; margin-left: 0; border-left: 0; padding-top: var(--s8); grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s6); }
-  .branches::before { content: ""; position: absolute; top: 0; left: calc((100% - 4 * var(--s6)) / 10); right: calc((100% - 4 * var(--s6)) / 10); border-top: 1px solid var(--ink); }
-  .branch { padding-left: 0; }
-  .branch::before { left: 50%; top: calc(-1 * var(--s8)); width: 0; height: var(--s6); border-top: 0; border-left: 1px solid var(--ink); }
-  .branch h3 { min-height: 3em; }
+  .measure { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 </style>
 </head>
 <body>
+<svg class="defs" aria-hidden="true">
+  <symbol id="i-sento" viewBox="0 0 48 48"><path class="f-paper" d="M32 24V6h6v18"/><path class="f-noren" d="M6 24 24 12l18 12z"/><path class="f-paper" d="M9 24h30v18H9z"/><path class="f-blue" d="M17 28h14v7H17z"/></symbol>
+  <symbol id="i-oke" viewBox="0 0 48 48"><path class="f-paper" d="M22 8h18v10H22z"/><path class="f-oke" d="M8 18h32l-4 22H12z"/><path d="M10 28h28"/></symbol>
+  <symbol id="i-yu" viewBox="0 0 48 48"><path class="f-water" d="M6 26h36v6a8 8 0 0 1-8 8H14a8 8 0 0 1-8-8z"/><path d="M16 20c-3-4 3-6 0-10M24 20c-3-4 3-6 0-10M32 20c-3-4 3-6 0-10"/></symbol>
+  <symbol id="i-new" viewBox="0 0 48 48"><path stroke-dasharray="3 4" d="M6 26 22 15l16 11zM9 26h26v16H9z"/><circle class="f-oke" cx="37" cy="12" r="8"/><path d="M37 8v8M33 12h8"/></symbol>
+  <symbol id="i-net" viewBox="0 0 48 48"><path d="M24 12 10 36h28z"/><circle class="f-blue" cx="24" cy="12" r="6"/><circle class="f-paper" cx="10" cy="36" r="6"/><circle class="f-paper" cx="38" cy="36" r="6"/></symbol>
+  <symbol id="bike" viewBox="-12 -24 52 36" overflow="visible"><circle cx="0" cy="0" r="9"/><circle cx="27" cy="0" r="9"/><path d="M0 0 9-13h12l6 13M9-13l5 13H0M21-13l-7 13M6-17h7M19-18h6"/></symbol>
+</svg>
 <main>
-  <p class="label">普通の銭湯研究所</p>
-  <h1><span>日本中の誰もが、</span><span><em>自転車で10分以内</em>に、</span><span>いい普通の銭湯に</span><span>行ける世界をつくる。</span></h1>
-  <p class="lead">銭湯がなくなる速さを下げることと、銭湯をつくれる速さを上げること。その両方に要ることを、5本の枝に分けました。まだ現場の話を聞く前の仮説です。</p>
-
-  <h2>要ることの全体</h2>
-  <p>枝の下の見出しを押すと、具体的にできそうなことを開いたり閉じたりできます。数字は、その中にある項目の数です。</p>
-  <div class="tree">
-    <div class="root">自転車10分圏内に、いい普通の銭湯</div>
-    <div class="branches"><section class="branch"><h3><span class="num">1</span>今ある銭湯をなくさない</h3><details open><summary><span>売上を増やす</span><span class="count">5</span></summary><ul><li>銭湯専用の簡単なWebサイト制作サービス</li><li>近隣の住民に向けた広告とブランディングの支援</li><li>オリジナルグッズの企画と販売の代行</li><li>地域の企業の福利厚生としての銭湯利用</li><li>営業時間別の来店データの分析</li></ul></details><details open><summary><span>光熱費と維持費を減らす</span><span class="count">6</span></summary><ul><li>IoTによる湯温と水量のモニタリング</li><li>AIによる来客数の予測と、沸かす湯量の調整</li><li>水道、ガス、電気代の自動分析</li><li>設備の故障の前ぶれの検知</li><li>複数の銭湯での物資の共同購入</li><li>廃熱を使う地域の企業との連携</li></ul></details><details open><summary><span>働く人の負担を減らす</span><span class="count">6</span></summary><ul><li>アナログな業務を観察して自動化する</li><li>水質、湯温、清掃の記録の自動入力</li><li>売上の集計と経理の自動化</li><li>消耗品の在庫管理と自動発注</li><li>補助金の申請書類の作成をAIで手伝う</li><li>複数の店でのスタッフの共同雇用</li></ul></details><details open><summary><span>後継者を確保する</span><span class="count">5</span></summary><ul><li>店主の経験と勘を映像と音声で記録する</li><li>銭湯ごとのAI業務マニュアルをつくる</li><li>銭湯経営の収支シミュレーター</li><li>後継者と銭湯のマッチング</li><li>副業として銭湯で働ける仕組み</li></ul></details></section><section class="branch"><h3><span class="num">2</span>日常的に通う人を増やす</h3><details open><summary><span>銭湯を知らない人に届ける</span><span class="count">4</span></summary><ul><li>引っ越してきた人に銭湯を紹介する仕組み</li><li>不動産サイトへの銭湯情報の掲載</li><li>地域の学校と組んだ銭湯体験</li><li>銭湯のある暮らしを伝えるメディア</li></ul></details><details open><summary><span>初めて行くハードルを下げる</span><span class="count">4</span></summary><ul><li>初めての人でも迷わないサインのデザイン</li><li>全国の銭湯で使える多言語の入浴ガイド</li><li>営業状況と混雑状況のリアルタイム公開</li><li>タオルやシャンプーの有無を事前に確かめられる仕組み</li></ul></details><details open><summary><span>通うことを習慣にする</span><span class="count">5</span></summary><ul><li>暮らしの中に銭湯を組み込むサービスデザイン</li><li>銭湯の共通定期券</li><li>銭湯に入った日の睡眠や気分の記録</li><li>仕事帰りに立ち寄れる銭湯の提案</li><li>地域のランニングや運動の施設との連携</li></ul></details></section><section class="branch"><h3><span class="num">3</span>銭湯の体験をよくする</h3><details open><summary><span>入浴の環境を快適にする</span><span class="count">4</span></summary><ul><li>湯温を自然に伝えるインターフェース</li><li>まぶしくない照明と、静かなサインの設計</li><li>混雑に応じた換気の調整</li><li>湿度、室温、水質のモニタリング</li></ul></details><details open><summary><span>人と人のつながりをつくる</span><span class="count">4</span></summary><ul><li>スマホを見なくても過ごせる待合室</li><li>地域の情報が自然に集まる掲示板</li><li>話したい人も、一人でいたい人も過ごせる空間の設計</li><li>子どもから高齢者までが一緒にいられる居場所づくり</li></ul></details><details open><summary><span>銭湯の個性を残す</span><span class="count">4</span></summary><ul><li>古い銭湯のロゴ、文字、タイルのアーカイブ</li><li>店主や常連客の記憶を記録する</li><li>改修してもその店らしさが残るデザインガイド</li><li>古い設備や家具の修理と再利用のネットワーク</li></ul></details></section><section class="branch"><h3><span class="num">4</span>銭湯を新しくつくれるようにする</h3><details open><summary><span>必要な場所を特定する</span><span class="count">3</span></summary><ul><li>全国の、自転車10分圏内の銭湯マップ</li><li>人口、人口密度、今ある銭湯から出店の需要を分析する</li><li>廃業を予定している銭湯と、地域への影響の把握</li></ul></details><details open><summary><span>開業のハードルを下げる</span><span class="count">5</span></summary><ul><li>銭湯開業の資金と収支のシミュレーター</li><li>開業に必要な手続きと設備をまとめたキット</li><li>小さな銭湯の建築と設備の標準化</li><li>廃業した銭湯の設備の再利用</li><li>空き物件や廃校などの活用</li></ul></details><details open><summary><span>新しい経営モデルをつくる</span><span class="count">5</span></summary><ul><li>住宅と銭湯を組み合わせた開発</li><li>地域の住民が共同で持つ銭湯</li><li>経理や発注などの裏方の仕事を、複数の店でまとめる</li><li>地域の福祉施設と組んだ銭湯</li><li>小さな銭湯を複数運営する事業体</li></ul></details></section><section class="branch"><h3><span class="num">5</span>銭湯を支える社会の仕組みをつくる</h3><details open><summary><span>知識を共有する</span><span class="count">4</span></summary><ul><li>全国の銭湯経営者が使えるAIの相談窓口</li><li>銭湯運営のオープンソース化</li><li>設備のトラブルと修理方法のデータベース</li><li>うまくいった例と失敗した例の共有</li></ul></details><details open><summary><span>社会的な価値を見えるようにする</span><span class="count">4</span></summary><ul><li>銭湯がなくなることで地域が失うものの調査</li><li>孤独感や生活の満足度への影響の調査</li><li>高齢者の外出の機会への影響の調査</li><li>災害時の入浴インフラとしての価値を示す</li></ul></details><details open><summary><span>外から資源が集まるようにする</span><span class="count">4</span></summary><ul><li>銭湯の課題と、技術者やデザイナーをつなぐ</li><li>企業による銭湯の研究開発の支援</li><li>行政への政策の提案</li><li>住民による修繕費の支援</li></ul></details></section></div>
-  </div>
-
-  <h2>どこから始めるか</h2>
-  <p>10個の案を、始めやすさと業界への効果で並べました。上にあるほど始めやすく、右にあるほど効果が大きい案です。点数は仮のものです。</p>
-  <div class="where">
-    <div class="plot">
-      <table>
-        <tbody><tr><th scope="row">5</th><td></td><td><a class="chip" href="#p09" title="記憶のアーカイブ">09</a></td><td><a class="chip" href="#p06" title="デザインシステム">06</a></td><td><a class="chip" href="#p04" title="空白地帯マップ">04</a></td><td></td></tr><tr><th scope="row">4</th><td></td><td></td><td></td><td><a class="chip" href="#p08" title="暮らしのデザイン">08</a></td><td><a class="chip" href="#p01" title="小さなIoT">01</a><a class="chip" href="#p05" title="経営の健康診断">05</a></td></tr><tr><th scope="row">3</th><td></td><td></td><td><a class="chip" href="#p03" title="カームな銭湯">03</a></td><td></td><td><a class="chip" href="#p02" title="仕事を引き継ぐAI">02</a><a class="chip" href="#p10" title="研究開発チーム">10</a></td></tr><tr><th scope="row">2</th><td></td><td></td><td></td><td></td><td></td></tr><tr><th scope="row">1</th><td></td><td></td><td></td><td></td><td><a class="chip" href="#p07" title="最小限の銭湯">07</a></td></tr></tbody>
-        <tfoot><tr><th></th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></tfoot>
-      </table>
-      <p class="axis">縦は始めやすさ、横は業界への効果。どちらも5点満点です。</p>
+  <span class="brand">普通の銭湯研究所</span>
+  <div class="hero">
+    <div>
+      <h1><span>日本中の誰もが、</span><span>自転車で10分以内に、</span><span>いい普通の銭湯に</span><span>行ける世界をつくる。</span></h1>
+      <p class="lead">特別な日のレジャーではなく、ふだんの日に通える銭湯の話です。まだ現場の話を聞く前の仮説を、絵と図にまとめました。</p>
     </div>
-    <ol class="plist"><li id="p01"><span class="chip">01</span><div><strong>小さなIoT</strong><p>古い設備を、改修なしでデジタルにする</p></div></li><li id="p02"><span class="chip">02</span><div><strong>仕事を引き継ぐAI</strong><p>店主の経験と判断を記録し、後継者が聞けるようにする</p></div></li><li id="p03"><span class="chip">03</span><div><strong>カームな銭湯</strong><p>画面や通知を増やさず、光や音で伝える</p></div></li><li id="p04"><span class="chip">04</span><div><strong>空白地帯マップ</strong><p>自転車10分で銭湯に行ける人の割合を地図にする</p></div></li><li id="p05"><span class="chip">05</span><div><strong>経営の健康診断</strong><p>資料を撮って送るだけで、経営の状態がわかる</p></div></li><li id="p06"><span class="chip">06</span><div><strong>デザインシステム</strong><p>料金表やサインを、無料で使えるようにする</p></div></li><li id="p07"><span class="chip">07</span><div><strong>最小限の銭湯</strong><p>豪華な設備がなくても成り立つ形を調べる</p></div></li><li id="p08"><span class="chip">08</span><div><strong>暮らしのデザイン</strong><p>週に何度も自然に通う生活の流れを設計する</p></div></li><li id="p09"><span class="chip">09</span><div><strong>記憶のアーカイブ</strong><p>建築、タイル、文字、店主の話を記録する</p></div></li><li id="p10"><span class="chip">10</span><div><strong>研究開発チーム</strong><p>小さな困りごとを集めて解決し、成果を公開する</p></div></li></ol>
+    <figure>
+      <svg class="pic" viewBox="0 0 480 400" role="img" aria-label="銭湯を中心にした円の中に家が並び、一軒の家から銭湯へ自転車で向かう道がある。円の外にも家が2軒ある。">
+        <circle class="ring" cx="240" cy="206" r="172"/>
+        <g class="house far" transform="translate(22 318)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g><g class="house far" transform="translate(432 30)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g>
+        <g class="house" transform="translate(96 96)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g><g class="house" transform="translate(338 104)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g><g class="house" transform="translate(352 268)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g><g class="house" transform="translate(226 322)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g><g class="house" transform="translate(120 300)"><path d="M0 14 14 0l14 14v18H0z"/><path d="M11 32V22h6v10"/></g>
+        <path class="route" d="M112 134c-4 60 30 100 82 104"/>
+        <g class="f-paper"><circle cx="126" cy="214" r="26" stroke="none"/><use href="#bike" x="101" y="202" width="52" height="36"/></g>
+        <path class="f-paper" d="M270 184v-78h14v78"/>
+        <g class="f-paper s-sub"><circle cx="277" cy="92" r="7"/><circle cx="287" cy="76" r="9"/><circle cx="301" cy="58" r="11"/></g>
+        <path class="f-paper" d="M194 188h92v58h-92z"/>
+        <path class="f-noren" d="M184 190 240 156l56 34z"/>
+        <path class="f-blue" d="M214 204h52v24h-52z"/><path class="s-paper" stroke-width="2" d="M231 212v16M249 212v16"/>
+        <text class="on-dark" x="240" y="217" font-size="13" text-anchor="middle" dominant-baseline="central">ゆ</text>
+        <text class="halo" x="30" y="262" font-size="19">自転車で10分</text>
+      </svg>
+      <figcaption>円の中の家は、自転車で10分あれば銭湯に着きます。円の外の家にも、この円を届けたい。</figcaption>
+    </figure>
   </div>
 
-  <h2>最初の3か月</h2>
-  <ol class="steps"><li><span class="when">1か月目</span><strong>銭湯の仕事を知る</strong><p>営業前から閉店後までの仕事を見せてもらい、一日の流れを書き出す。話を聞くだけでは出てこない、小さな不便を集める。</p></li><li><span class="when">2か月目</span><strong>一つの困りごとを解決する</strong><p>手段を決めずに、試作品を一つつくる。店主が何もしなくても使えるくらいのものを目指す。</p></li><li><span class="when">3か月目</span><strong>ほかの銭湯でも使えるようにする</strong><p>減らせた作業時間と負担を測る。つくり方と結果を公開し、別の銭湯でも使えるかを確かめる。</p></li></ol>
+  <section class="sec">
+    <h2>蛇口を開けて、栓から逃がさない</h2>
+    <p>湯船のお湯を、日本にある銭湯の数だと考えます。新しくできる数より、なくなる数のほうが多ければ、お湯は減っていきます。やることは5つに分かれます。</p>
+    <div class="tub">
+      <figure class="tub-fig">
+        <svg class="pic" viewBox="0 0 360 352" role="img" aria-label="湯船の図。蛇口から注ぐお湯が4番の新しくつくる、栓から出ていくお湯が1番のなくさない、湯船の中が2番の通う人を増やすと3番の体験をよくする、湯船を支える床が5番の仕組みで支える。">
+          <path stroke-width="9" stroke-linecap="butt" d="M20 46h58a14 14 0 0 1 14 14v14"/><path stroke-width="5" d="M52 44V28M40 28h24"/>
+          <path class="s-blue" stroke-width="6" stroke-dasharray="10 8" d="M92 86v48"/>
+          <circle class="mk" cx="130" cy="38" r="11"/><text class="mk-n" x="130" y="38">4</text><text x="148" y="38" font-size="17" dominant-baseline="central">新しくつくる</text>
+          <text class="cap" x="119" y="66" font-size="13">つくれる速さを上げる</text>
+          <path class="f-paper" d="M40 112v102a40 40 0 0 0 40 40h200a40 40 0 0 0 40-40V112"/>
+          <path class="f-water" stroke="none" d="M42 142h276v72a38 38 0 0 1-38 38H80a38 38 0 0 1-38-38z"/>
+          <path class="s-blue" stroke-width="2.5" d="M44 142c12-6 24 6 36 0s24 6 36 0 24 6 36 0 24 6 36 0 24 6 36 0 24 6 36 0 24 6 36 0 12 3 20 0"/>
+          <path stroke-width="5" d="M26 112h308"/>
+          <circle class="mk" cx="100" cy="178" r="11"/><text class="mk-n" x="100" y="178">2</text><text x="118" y="178" font-size="17" dominant-baseline="central">通う人を増やす</text>
+          <circle class="mk" cx="100" cy="214" r="11"/><text class="mk-n" x="100" y="214">3</text><text x="118" y="214" font-size="17" dominant-baseline="central">体験をよくする</text>
+          <path stroke-width="9" stroke-linecap="butt" d="M266 256v26"/>
+          <path class="s-blue" stroke-width="6" stroke-dasharray="8 8" d="M266 292v22"/>
+          <circle class="mk" cx="120" cy="278" r="11"/><text class="mk-n" x="120" y="278">1</text><text x="138" y="278" font-size="17" dominant-baseline="central">なくさない</text>
+          <text class="cap" x="109" y="306" font-size="13">なくなる速さを下げる</text>
+          <path class="f-noren" stroke="none" d="M0 322h360v30H0z"/>
+          <circle class="mk" cx="100" cy="337" r="11"/><text class="mk-n" x="100" y="337">5</text><text class="on-dark" x="118" y="337" font-size="17" dominant-baseline="central">仕組みで支える</text>
+        </svg>
+      </figure>
+      <nav class="tub-links" aria-label="5つのやること">
+        <a href="#b1"><span class="mark">1</span><span>今ある銭湯をなくさない</span></a><a href="#b2"><span class="mark">2</span><span>日常的に通う人を増やす</span></a><a href="#b3"><span class="mark">3</span><span>銭湯の体験をよくする</span></a><a href="#b4"><span class="mark">4</span><span>銭湯を新しくつくれるようにする</span></a><a href="#b5"><span class="mark">5</span><span>銭湯を支える社会の仕組みをつくる</span></a>
+      </nav>
+    </div>
+  </section>
 
-  <h2>何で測るか</h2>
-  <p>アプリの利用者数やフォロワー数では測りません。</p>
-  <ul class="measure"><li>減らせた労働時間</li><li>減らせた経費</li><li>続けられた銭湯の数</li><li>自転車10分圏内で銭湯に行ける人の割合</li></ul>
+  <section class="sec">
+    <h2>5つのやることの中身</h2>
+    <p>タイルを押すと、具体的にできそうなことが開きます。</p>
+    <section class="branch" id="b1"><h3><svg class="icon" aria-hidden="true"><use href="#i-sento"/></svg><span class="mark">1</span><span>今ある銭湯をなくさない</span></h3><div class="tiles"><button class="tile" type="button" aria-expanded="false" aria-controls="b1g0"><span class="tile-t">売上を増やす</span><span class="tile-n">5つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b1g1"><span class="tile-t">光熱費と維持費を減らす</span><span class="tile-n">6つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b1g2"><span class="tile-t">働く人の負担を減らす</span><span class="tile-n">6つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b1g3"><span class="tile-t">後継者を確保する</span><span class="tile-n">5つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button></div><div class="panel" id="b1g0" hidden><h4>売上を増やすためにできそうなこと</h4><ul><li>銭湯専用の簡単なWebサイト制作サービス</li><li>近隣の住民に向けた広告とブランディングの支援</li><li>オリジナルグッズの企画と販売の代行</li><li>地域の企業の福利厚生としての銭湯利用</li><li>営業時間別の来店データの分析</li></ul></div><div class="panel" id="b1g1" hidden><h4>光熱費と維持費を減らすためにできそうなこと</h4><ul><li>IoTによる湯温と水量のモニタリング</li><li>AIによる来客数の予測と、沸かす湯量の調整</li><li>水道、ガス、電気代の自動分析</li><li>設備の故障の前ぶれの検知</li><li>複数の銭湯での物資の共同購入</li><li>廃熱を使う地域の企業との連携</li></ul></div><div class="panel" id="b1g2" hidden><h4>働く人の負担を減らすためにできそうなこと</h4><ul><li>アナログな業務を観察して自動化する</li><li>水質、湯温、清掃の記録の自動入力</li><li>売上の集計と経理の自動化</li><li>消耗品の在庫管理と自動発注</li><li>補助金の申請書類の作成をAIで手伝う</li><li>複数の店でのスタッフの共同雇用</li></ul></div><div class="panel" id="b1g3" hidden><h4>後継者を確保するためにできそうなこと</h4><ul><li>店主の経験と勘を映像と音声で記録する</li><li>銭湯ごとのAI業務マニュアルをつくる</li><li>銭湯経営の収支シミュレーター</li><li>後継者と銭湯のマッチング</li><li>副業として銭湯で働ける仕組み</li></ul></div></section><section class="branch" id="b2"><h3><svg class="icon" aria-hidden="true"><use href="#i-oke"/></svg><span class="mark">2</span><span>日常的に通う人を増やす</span></h3><div class="tiles"><button class="tile" type="button" aria-expanded="false" aria-controls="b2g0"><span class="tile-t">銭湯を知らない人に届ける</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b2g1"><span class="tile-t">初めて行くハードルを下げる</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b2g2"><span class="tile-t">通うことを習慣にする</span><span class="tile-n">5つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button></div><div class="panel" id="b2g0" hidden><h4>銭湯を知らない人に届けるためにできそうなこと</h4><ul><li>引っ越してきた人に銭湯を紹介する仕組み</li><li>不動産サイトへの銭湯情報の掲載</li><li>地域の学校と組んだ銭湯体験</li><li>銭湯のある暮らしを伝えるメディア</li></ul></div><div class="panel" id="b2g1" hidden><h4>初めて行くハードルを下げるためにできそうなこと</h4><ul><li>初めての人でも迷わないサインのデザイン</li><li>全国の銭湯で使える多言語の入浴ガイド</li><li>営業状況と混雑状況のリアルタイム公開</li><li>タオルやシャンプーの有無を事前に確かめられる仕組み</li></ul></div><div class="panel" id="b2g2" hidden><h4>通うことを習慣にするためにできそうなこと</h4><ul><li>暮らしの中に銭湯を組み込むサービスデザイン</li><li>銭湯の共通定期券</li><li>銭湯に入った日の睡眠や気分の記録</li><li>仕事帰りに立ち寄れる銭湯の提案</li><li>地域のランニングや運動の施設との連携</li></ul></div></section><section class="branch" id="b3"><h3><svg class="icon" aria-hidden="true"><use href="#i-yu"/></svg><span class="mark">3</span><span>銭湯の体験をよくする</span></h3><div class="tiles"><button class="tile" type="button" aria-expanded="false" aria-controls="b3g0"><span class="tile-t">入浴の環境を快適にする</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b3g1"><span class="tile-t">人と人のつながりをつくる</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b3g2"><span class="tile-t">銭湯の個性を残す</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button></div><div class="panel" id="b3g0" hidden><h4>入浴の環境を快適にするためにできそうなこと</h4><ul><li>湯温を自然に伝えるインターフェース</li><li>まぶしくない照明と、静かなサインの設計</li><li>混雑に応じた換気の調整</li><li>湿度、室温、水質のモニタリング</li></ul></div><div class="panel" id="b3g1" hidden><h4>人と人のつながりをつくるためにできそうなこと</h4><ul><li>スマホを見なくても過ごせる待合室</li><li>地域の情報が自然に集まる掲示板</li><li>話したい人も、一人でいたい人も過ごせる空間の設計</li><li>子どもから高齢者までが一緒にいられる居場所づくり</li></ul></div><div class="panel" id="b3g2" hidden><h4>銭湯の個性を残すためにできそうなこと</h4><ul><li>古い銭湯のロゴ、文字、タイルのアーカイブ</li><li>店主や常連客の記憶を記録する</li><li>改修してもその店らしさが残るデザインガイド</li><li>古い設備や家具の修理と再利用のネットワーク</li></ul></div></section><section class="branch" id="b4"><h3><svg class="icon" aria-hidden="true"><use href="#i-new"/></svg><span class="mark">4</span><span>銭湯を新しくつくれるようにする</span></h3><div class="tiles"><button class="tile" type="button" aria-expanded="false" aria-controls="b4g0"><span class="tile-t">必要な場所を特定する</span><span class="tile-n">3つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b4g1"><span class="tile-t">開業のハードルを下げる</span><span class="tile-n">5つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b4g2"><span class="tile-t">新しい経営モデルをつくる</span><span class="tile-n">5つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button></div><div class="panel" id="b4g0" hidden><h4>必要な場所を特定するためにできそうなこと</h4><ul><li>全国の、自転車10分圏内の銭湯マップ</li><li>人口、人口密度、今ある銭湯から出店の需要を分析する</li><li>廃業を予定している銭湯と、地域への影響の把握</li></ul></div><div class="panel" id="b4g1" hidden><h4>開業のハードルを下げるためにできそうなこと</h4><ul><li>銭湯開業の資金と収支のシミュレーター</li><li>開業に必要な手続きと設備をまとめたキット</li><li>小さな銭湯の建築と設備の標準化</li><li>廃業した銭湯の設備の再利用</li><li>空き物件や廃校などの活用</li></ul></div><div class="panel" id="b4g2" hidden><h4>新しい経営モデルをつくるためにできそうなこと</h4><ul><li>住宅と銭湯を組み合わせた開発</li><li>地域の住民が共同で持つ銭湯</li><li>経理や発注などの裏方の仕事を、複数の店でまとめる</li><li>地域の福祉施設と組んだ銭湯</li><li>小さな銭湯を複数運営する事業体</li></ul></div></section><section class="branch" id="b5"><h3><svg class="icon" aria-hidden="true"><use href="#i-net"/></svg><span class="mark">5</span><span>銭湯を支える社会の仕組みをつくる</span></h3><div class="tiles"><button class="tile" type="button" aria-expanded="false" aria-controls="b5g0"><span class="tile-t">知識を共有する</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b5g1"><span class="tile-t">社会的な価値を見えるようにする</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button><button class="tile" type="button" aria-expanded="false" aria-controls="b5g2"><span class="tile-t">外から資源が集まるようにする</span><span class="tile-n">4つ<svg class="pm" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/><path class="v" d="M8 3v10"/></svg></span></button></div><div class="panel" id="b5g0" hidden><h4>知識を共有するためにできそうなこと</h4><ul><li>全国の銭湯経営者が使えるAIの相談窓口</li><li>銭湯運営のオープンソース化</li><li>設備のトラブルと修理方法のデータベース</li><li>うまくいった例と失敗した例の共有</li></ul></div><div class="panel" id="b5g1" hidden><h4>社会的な価値を見えるようにするためにできそうなこと</h4><ul><li>銭湯がなくなることで地域が失うものの調査</li><li>孤独感や生活の満足度への影響の調査</li><li>高齢者の外出の機会への影響の調査</li><li>災害時の入浴インフラとしての価値を示す</li></ul></div><div class="panel" id="b5g2" hidden><h4>外から資源が集まるようにするためにできそうなこと</h4><ul><li>銭湯の課題と、技術者やデザイナーをつなぐ</li><li>企業による銭湯の研究開発の支援</li><li>行政への政策の提案</li><li>住民による修繕費の支援</li></ul></div></section>
+  </section>
+
+  <section class="sec">
+    <h2>10個の案と、始めやすさ</h2>
+    <p>業界への効果と始めやすさを、5点満点でつけました。現場の話を聞く前の、仮の点数です。</p>
+    <ol class="plist"><li><div class="p-name"><strong>小さなIoT</strong><p>古い設備を、改修なしでデジタルにする</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち4点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><b>4</b></div></li><li><div class="p-name"><strong>仕事を引き継ぐAI</strong><p>店主の経験と判断を記録し、後継者が聞けるようにする</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち3点"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><b>3</b></div></li><li><div class="p-name"><strong>カームな銭湯</strong><p>画面や通知を増やさず、光や音で伝える</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち3点"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><b>3</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち3点"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><b>3</b></div></li><li><div class="p-name"><strong>空白地帯マップ</strong><p>自転車10分で銭湯に行ける人の割合を地図にする</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち4点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><b>4</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div></li><li><div class="p-name"><strong>経営の健康診断</strong><p>資料を撮って送るだけで、経営の状態がわかる</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち4点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><b>4</b></div></li><li><div class="p-name"><strong>デザインシステム</strong><p>料金表やサインを、無料で使えるようにする</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち3点"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><b>3</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div></li><li><div class="p-name"><strong>最小限の銭湯</strong><p>豪華な設備がなくても成り立つ形を調べる</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち1点"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><b>1</b></div></li><li><div class="p-name"><strong>暮らしのデザイン</strong><p>週に何度も自然に通う生活の流れを設計する</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち4点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><b>4</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち4点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><b>4</b></div></li><li><div class="p-name"><strong>記憶のアーカイブ</strong><p>建築、タイル、文字、店主の話を記録する</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち2点"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span><b>2</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div></li><li><div class="p-name"><strong>研究開発チーム</strong><p>小さな困りごとを集めて解決し、成果を公開する</p></div><div class="meter"><span>効果</span><span class="cells" role="img" aria-label="5点のうち5点"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>5</b></div><div class="meter"><span>始めやすさ</span><span class="cells" role="img" aria-label="5点のうち3点"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><b>3</b></div></li></ol>
+  </section>
+
+  <section class="sec">
+    <h2>最初の3か月</h2>
+    <ol class="steps"><li><span class="when"><b>1</b>か月目</span><strong>銭湯の仕事を知る</strong><p>営業前から閉店後までの仕事を見せてもらい、一日の流れを書き出す。</p></li><li><span class="when"><b>2</b>か月目</span><strong>一つの困りごとを解決する</strong><p>手段を決めずに、試作品を一つつくる。</p></li><li><span class="when"><b>3</b>か月目</span><strong>ほかの銭湯でも使えるようにする</strong><p>減らせた時間を測り、つくり方と結果を公開する。</p></li></ol>
+  </section>
+
+  <section class="sec">
+    <h2>何で測るか</h2>
+    <p>アプリの利用者数やフォロワー数では測りません。</p>
+    <ul class="measure"><li>減らせた労働時間</li><li>減らせた経費</li><li>続けられた銭湯の数</li><li>自転車10分圏内で銭湯に行ける人の割合</li></ul>
+  </section>
 
   <footer>もとの文章は<a href="https://github.com/harukaaatashi/futsu-no-sento">GitHubのリポジトリ</a>にあります。</footer>
 </main>
 <script>
-// 狭い画面では、枝の中身を閉じた状態から始める
-if (window.matchMedia("(max-width: 1099px)").matches) document.querySelectorAll("details").forEach(d => d.removeAttribute("open"));
+// タイルを押すと、その枝の下に中身を開く。同じ枝で開くのは1つだけ
+document.querySelectorAll(".branch").forEach(function (branch) {
+  var tiles = branch.querySelectorAll(".tile");
+  tiles.forEach(function (tile) {
+    tile.addEventListener("click", function () {
+      var open = tile.getAttribute("aria-expanded") === "true";
+      tiles.forEach(function (t) {
+        t.setAttribute("aria-expanded", "false");
+        document.getElementById(t.getAttribute("aria-controls")).hidden = true;
+      });
+      if (!open) {
+        tile.setAttribute("aria-expanded", "true");
+        document.getElementById(tile.getAttribute("aria-controls")).hidden = false;
+      }
+    });
+  });
+});
 </script>
 </body>
 </html>
