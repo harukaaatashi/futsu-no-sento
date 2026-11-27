@@ -116,10 +116,34 @@ for b in branches:
              f'<p class="related"><span>この枝の案</span>{rel}</p><div class="tiles">{tiles}</div>{panels}</section>')
 
 plist = ''.join(
-    f'<li><a href="idea-{i["id"]}.html"><div class="p-name"><strong>{e(i["name"])}</strong><p>{e(i["one"])}</p></div>'
+    f'<li><a href="idea-{i["id"]}.html"><div class="p-name"><strong><span class="no">{int(i["id"])}</span>{e(i["name"])}</strong><p>{e(i["one"])}</p></div>'
     f'{meter("効果", i["effect"])}{meter("始めやすさ", i["ease"])}'
     f'<div class="who"><span>先にやっている人</span><b>{e(i["players"])}</b><span class="go">事例を{len(i["cases"])}件見る{ARROW}</span></div></a></li>'
     for i in ideas)
+# 2つの軸の上に10個の案を置く。印の形で、先にやっている人の多さも見せる
+PCLASS = {'見つからず': 'p-none', '一部にいる': 'p-some', '多い': 'p-many'}
+map_rows = ''
+for ease in range(5, 0, -1):
+    cells = ''
+    for eff in range(1, 6):
+        here = ''.join(f'<a class="pin {PCLASS[i["players"]]}" href="idea-{i["id"]}.html"><b>{int(i["id"])}</b><span>{e(i["name"])}</span></a>' for i in ideas if i['effect'] == eff and i['ease'] == ease)
+        cells += f'<td class="{"good" if eff >= 4 and ease >= 4 else ""}">{here}</td>'
+    map_rows += f'<tr><th scope="row">{ease}</th>{cells}</tr>'
+idea_map = f'''<figure class="map">
+      <p class="axis-y"><span>始めやすい</span><span>始めにくい</span></p>
+      <table>
+        <caption>10個の案を、業界への効果と始めやすさで並べた図</caption>
+        <tbody>{map_rows}</tbody>
+        <tfoot><tr><td></td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></tfoot>
+      </table>
+      <p class="axis-x"><span>効果が小さい</span><span>効果が大きい</span></p>
+      <ul class="legend" aria-label="印の見方">
+        <li><span class="pin p-none"><b>1</b></span>先にやっている人が見つからない</li>
+        <li><span class="pin p-some"><b>1</b></span>一部にいる</li>
+        <li><span class="pin p-many"><b>1</b></span>多い</li>
+        <li><span class="swatch"></span>始めやすくて、効果も大きいところ</li>
+      </ul>
+    </figure>'''
 steps = ''.join(f'<li><span class="when"><b>{m[0]}</b>か月目</span><strong>{m[1]}</strong><p>{m[2]}</p></li>' for m in months)
 gallery = ''.join(
     f'<figure><img src="{C}{f}/960px-{f.split("/")[-1]}" alt="{e(alt)}" loading="lazy" width="960" height="720">'
@@ -197,7 +221,8 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
 
   <section class="sec" id="ideas">
     <h2>10個の案と、先にやっている人</h2>
-    <p>案ごとに、業界への効果、始めやすさ、先にやっている人の多さを並べました。案を押すと、調べた事例が写真つきで見られます。点数は、現場の話を聞く前の仮のものです。</p>
+    <p>右上にあるほど、始めやすくて効果も大きい案です。印が青く塗ってあるものは、先にやっている人が見つからなかった案です。番号は、下の一覧の番号と同じです。案を押すと、調べた事例が写真つきで見られます。点数は、現場の話を聞く前の仮のものです。</p>
+    {idea_map}
     <ol class="plist">{plist}</ol>
   </section>
 
