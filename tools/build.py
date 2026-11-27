@@ -50,6 +50,10 @@ DEFS = '''<svg class="defs" aria-hidden="true">
   <symbol id="i-new" viewBox="0 0 48 48"><path stroke-dasharray="3 4" d="M6 26 22 15l16 11zM9 26h26v16H9z"/><circle class="f-oke" cx="37" cy="12" r="8"/><path d="M37 8v8M33 12h8"/></symbol>
   <symbol id="i-net" viewBox="0 0 48 48"><path d="M24 12 10 36h28z"/><circle class="f-blue" cx="24" cy="12" r="6"/><circle class="f-paper" cx="10" cy="36" r="6"/><circle class="f-paper" cx="38" cy="36" r="6"/></symbol>
   <symbol id="bike" viewBox="-12 -24 52 36" overflow="visible"><circle cx="0" cy="0" r="9"/><circle cx="27" cy="0" r="9"/><path d="M0 0 9-13h12l6 13M9-13l5 13H0M21-13l-7 13M6-17h7M19-18h6"/></symbol>
+  <symbol id="c-tag" viewBox="0 0 48 48"><path d="M8 8h32"/><path class="f-paper" d="M11 8h8v26h-8z"/><path class="f-blue" d="M21 8h8v26h-8z"/><path class="f-paper" d="M31 8h8v26h-8z"/></symbol>
+  <symbol id="c-mix" viewBox="0 0 48 48"><circle class="f-paper" cx="17" cy="14" r="7"/><path class="f-paper" d="M5 42v-8a12 12 0 0 1 24 0v8"/><circle class="f-oke" cx="35" cy="24" r="5"/><path class="f-oke" d="M27 42v-4a8 8 0 0 1 16 0v4"/></symbol>
+  <symbol id="c-town" viewBox="0 0 48 48"><path class="f-paper" d="M4 40V22l10-8 10 8v18z"/><path class="f-blue" d="M10 26h8v6h-8z"/><path class="f-paper" d="M24 40V28h10v12zM34 40V24h10v16z"/><path d="M38 30v4"/></symbol>
+  <symbol id="c-sun" viewBox="0 0 48 48"><circle class="f-oke" cx="24" cy="26" r="9"/><path d="M24 6v6M8 26h4M36 26h4M11 13l4 4M37 13l-4 4M6 42h36"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></symbol>
 </svg>'''
 ARROW = '<svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg>'
@@ -169,6 +173,19 @@ idea_map = f'''<figure class="map">
         <li><span class="pin p-many"><b>1</b></span>多い</li>
       </ul>
     </figure>'''
+clues = [
+    ('c-tag', '常連さんの名前札', '来たら自分の札をひっくり返す。だれが来ているかが、ひと目でわかります。'),
+    ('c-mix', '子どもとお年寄りが交わる', '学童の子どもとお年寄りが同じ場所にいて、教わったり遊んだりしています。'),
+    ('c-town', '街との接点を持つ', '長屋や休憩の場所、本屋が隣にくっついていて、風呂のほかの用でも立ち寄れます。'),
+    ('c-sun', '朝のラジオ体操', '夏の朝6時に集まって体操をし、風呂に入って帰ります。毎週行けば顔見知りができます。'),
+]
+clue_html = ''.join(f'<li><svg class="icon" aria-hidden="true"><use href="#{ic}"/></svg><strong>{t}</strong><p>{d}</p></li>' for ic, t, d in clues)
+now = [
+    ('はるか', '銭湯のマップを作ってみる', 'なくなりそうな、いい銭湯を探すためでもあります。', 'idea-04.html'),
+    ('なる', 'クラブ銭湯をつくる', '会社の部活として、共通の入浴券でいろいろな銭湯を回り、風呂上がりに話します。', 'idea-10.html'),
+    ('なる', '支える相手を深掘りする', 'どういう銭湯を、どういう人たちを支えるのかを、もう少し具体的にします。', ''),
+]
+now_html = ''.join(f'<li><span class="by">{w}</span><strong>{t}</strong><p>{d}</p>' + (f'<a class="go" href="{h}">関わる案を見る{ARROW}</a>' if h else '') + '</li>' for w, t, d, h in now)
 steps = ''.join(f'<li><span class="when"><b>{m[0]}</b>か月目</span><strong>{m[1]}</strong><p>{m[2]}</p></li>' for m in months)
 gallery = ''.join(
     f'<figure><img src="{C}{f}/960px-{f.split("/")[-1]}" alt="{e(alt)}" loading="lazy" width="960" height="720">'
@@ -205,6 +222,13 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
     <h2>普通の銭湯の風景</h2>
     <div class="photos">{gallery}</div>
     <p class="note">写真は、見やすいように一部を切り抜いて表示しています。</p>
+  </section>
+
+  <section class="sec">
+    <h2>いい普通の銭湯の手がかり</h2>
+    <p>いいなと思った銭湯の例を持ち寄りました。どれも、ただ入浴する場所ではなく、人がつながる場所として働いています。地域の見守りにもなっています。</p>
+    <ul class="clues">{clue_html}</ul>
+    <p class="note">「いい普通の銭湯」は、まだ仮の言葉です。こうした例を集めて現地を回りながら、言葉にしていきます。</p>
   </section>
 
   <section class="sec">
@@ -249,6 +273,22 @@ index = head('普通の銭湯研究所', '日本中の誰もが、自転車で10
     <p>どの図も、右上にあるほどよい案です。上のボタンで、図の軸を切り替えられます。印が青く塗ってあるものは、先にやっている人が見つからなかった案です。番号は、下の一覧の番号と同じです。案を押すと、調べた事例が写真つきで見られます。点数は、現場の話を聞く前の仮のものです。</p>
     {idea_map}
     <ol class="plist">{plist}</ol>
+  </section>
+
+  <section class="sec">
+    <h2>だれを支えるか</h2>
+    <p>すべての銭湯を支えようとはしません。いまの考えは次のとおりで、これから深掘りします。</p>
+    <ul class="targets">
+      <li class="yes"><span class="tag">ここを支える</span><strong>とてもいいのに、忙しくて手が回らない銭湯</strong><p>やりたいけれど面倒でやれていないことを、代わりにやります。</p></li>
+      <li><span class="tag">参考にする</span><strong>個性がとても強い銭湯</strong><p>学ぶところは多いけれど、自分たちが何かをする相手ではなさそうです。</p></li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <h2>いまやっていること</h2>
+    <p>2026年11月27日に2人で話して決めました。毎週金曜日に、進み具合を話します。</p>
+    <ul class="now">{now_html}</ul>
+    <p class="note">話した中身は<a href="https://github.com/harukaaatashi/futsu-no-sento/blob/main/notes/2026-11-27.md">11月27日のメモ</a>にあります。</p>
   </section>
 
   <section class="sec">
@@ -334,6 +374,12 @@ for n, i in enumerate(ideas):
                     f'<button class="btn" type="button" data-close>閉じる</button></div></div></template>')
     prev_i, next_i = ideas[n - 1], ideas[(n + 1) % len(ideas)]
     gap = ''.join(f'<li>{e(g)}</li>' for g in i['gap'])
+    talk = f'''
+  <section class="sec">
+    <h2>2人で話したこと</h2>
+    <p class="talk">{e(i["talk"])}</p>
+    <p class="note">2026年11月27日に話した中身です。</p>
+  </section>''' if i.get('talk') else ''
     page = head(f'{i["name"]}｜普通の銭湯研究所', i['one']) + f'''
   <a class="brand" href="index.html">普通の銭湯研究所</a>
   <nav class="crumb" aria-label="いまいる場所"><a href="index.html">全体</a>{ARROW}<a href="index.html#ideas">10個の案</a>{ARROW}<span>{e(i["name"])}</span></nav>
@@ -357,6 +403,7 @@ for n, i in enumerate(ideas):
     <p class="note">2026年11月に、公開されている資料を検索して調べました。見つからなかったことは、だれもやっていないことの証明ではありません。</p>
   </section>
 
+{talk}
   <section class="sec">
     <h2>先にやっている人の事例</h2>
     <p>{len(i["cases"])}件あります。カードを押すと、いつから、どの規模で、だれのお金でやっているかが見られます。</p>

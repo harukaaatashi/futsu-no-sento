@@ -46,6 +46,19 @@ figcaption { font-size: var(--t-s); color: var(--sub); line-height: 1.6; margin-
 .credit { display: block; font-size: var(--t-xs); }
 .sec > .note { font-size: var(--t-xs); margin-top: var(--s4); }
 
+/* 手がかり、支える相手、いまやっていること */
+.clues, .targets, .now { display: grid; gap: var(--s1); padding: var(--s1); background: var(--grout); border-radius: var(--s2); margin-top: var(--s6); }
+.clues li, .targets li, .now li { background: var(--paper); border-radius: var(--s1); padding: var(--s5) var(--s4); }
+.clues strong, .targets strong, .now strong { display: block; font-family: var(--maru); font-size: var(--t-m); line-height: 1.45; margin-top: var(--s3); }
+.clues p, .targets p, .now p { font-size: var(--t-s); color: var(--sub); line-height: 1.65; margin-top: var(--s2); }
+.tag, .by { display: inline-block; font-size: var(--t-xs); line-height: 1; padding: var(--s1) var(--s2); border: 2px solid var(--sub); border-radius: var(--s1); color: var(--sub); font-family: var(--maru); font-weight: 700; }
+.targets .yes { background: var(--blue); color: var(--paper); }
+.targets .yes p { color: var(--paper); }
+.targets .yes .tag { border-color: var(--paper); color: var(--paper); }
+.by { border-color: var(--blue); color: var(--blue); }
+.now .go { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--t-s); margin-top: var(--s3); }
+.sec > .talk { color: var(--ink); max-width: 36em; padding: var(--s5) var(--s4); background: var(--water); border-radius: var(--s2); margin-top: var(--s6); }
+
 .tub { display: grid; gap: var(--s6); margin-top: var(--s8); align-items: center; }
 .tub-fig { max-width: 520px; }
 .tub-links { display: grid; gap: var(--s2); }
@@ -185,6 +198,7 @@ dialog dd { line-height: 1.65; }
 .pager .next { text-align: right; }
 
 @media (min-width: 560px) {
+  .clues { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s8) var(--s6); }
 }
 @media (min-width: 760px) {
@@ -205,6 +219,10 @@ dialog dd { line-height: 1.65; }
   .plist a { grid-template-columns: 1fr 132px 132px 148px; align-items: center; gap: var(--s6); padding: var(--s4) var(--s2); }
   .p-name, .who { grid-column: auto; }
   .steps { grid-template-columns: repeat(3, 1fr); }
+  .clues { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .targets { grid-template-columns: 3fr 2fr; }
+  .now { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sec > .talk { padding: var(--s6); }
   .measure { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .facts { grid-template-columns: repeat(3, 1fr); }
   .two { grid-template-columns: 1fr 1fr; gap: var(--s10); }
