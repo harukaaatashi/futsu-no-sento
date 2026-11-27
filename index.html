@@ -52,6 +52,11 @@ figcaption { font-size: var(--t-s); color: var(--sub); line-height: 1.6; margin-
 .mk { fill: var(--oke); stroke-width: 2; }
 .pic .mk-n { font-size: 13px; font-weight: 900; text-anchor: middle; dominant-baseline: central; }
 
+.photos { display: grid; gap: var(--s4); margin-top: var(--s6); }
+.photos img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--s2); background: var(--grout); }
+.credit { display: block; font-size: var(--t-xs); }
+.sec > .note { font-size: var(--t-xs); margin-top: var(--s4); }
+
 .tub { display: grid; gap: var(--s6); margin-top: var(--s8); align-items: center; }
 .tub-fig { max-width: 520px; }
 .tub-links { display: grid; gap: var(--s2); }
@@ -107,6 +112,8 @@ footer { margin-top: var(--s24); font-size: var(--t-s); color: var(--sub); }
   h1 { font-size: var(--t-xxl); line-height: 1.35; }
   h2 { font-size: 36px; }
   .tub { grid-template-columns: minmax(0, 520px) 1fr; gap: var(--s12); }
+  .photos { grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: var(--s6); }
+  .photos figure:first-child { grid-row: 1 / 3; }
   .tiles { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
   .panel { padding: var(--s6); }
   .panel ul { grid-template-columns: 1fr 1fr; }
@@ -151,6 +158,12 @@ footer { margin-top: var(--s24); font-size: var(--t-s); color: var(--sub); }
       <figcaption>円の中の家は、自転車で10分あれば銭湯に着きます。円の外の家にも、この円を届けたい。</figcaption>
     </figure>
   </div>
+
+  <section class="sec">
+    <h2>普通の銭湯の風景</h2>
+    <div class="photos"><figure><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Tatsuno-yu_Sento_Tokyo_1.jpg/960px-Tatsuno-yu_Sento_Tokyo_1.jpg" alt="瓦屋根の入口がある、昔ながらの銭湯の建物" loading="lazy" width="960" height="720"><figcaption>外から見た銭湯。東京都練馬区にあります。<span class="credit">写真は<a href="https://commons.wikimedia.org/wiki/File:Tatsuno-yu_Sento_Tokyo_1.jpg">Kurihaya</a>さん、<a href="https://creativecommons.org/publicdomain/zero/1.0/deed.ja">CC0</a></span></figcaption></figure><figure><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Interior_of_Bathroom_of_Kodakara-Yu.jpg/960px-Interior_of_Bathroom_of_Kodakara-Yu.jpg" alt="白いタイルの浴室と、壁いっぱいの富士山の絵" loading="lazy" width="960" height="720"><figcaption>浴室の壁に描かれた富士山。江戸東京たてもの園に残されている子宝湯です。<span class="credit">写真は<a href="https://commons.wikimedia.org/wiki/File:Interior_of_Bathroom_of_Kodakara-Yu.jpg">kanegen</a>さん、<a href="https://creativecommons.org/licenses/by/2.0/deed.ja">CC BY 2.0</a></span></figcaption></figure><figure><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Shoes_boxes_at_a_Sento_-_Tokyo_area_-_Dec_22_2021.jpeg/960px-Shoes_boxes_at_a_Sento_-_Tokyo_area_-_Dec_22_2021.jpeg" alt="番号のついた小さな扉が並ぶ、木の下足箱" loading="lazy" width="960" height="720"><figcaption>入口の下足箱。東京近郊の銭湯です。<span class="credit">写真は<a href="https://commons.wikimedia.org/wiki/File:Shoes_boxes_at_a_Sento_-_Tokyo_area_-_Dec_22_2021.jpeg">Nesnad</a>さん、<a href="https://creativecommons.org/licenses/by/4.0/deed.ja">CC BY 4.0</a></span></figcaption></figure></div>
+    <p class="note">写真は、見やすいように一部を切り抜いて表示しています。</p>
+  </section>
 
   <section class="sec">
     <h2>蛇口を開けて、栓から逃がさない</h2>
