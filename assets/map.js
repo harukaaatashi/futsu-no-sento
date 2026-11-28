@@ -85,6 +85,7 @@
     return { x: 0, y: Math.max(0, window.innerHeight - sheet.getBoundingClientRect().top) };
   }
   function focus(latlng, zoom) {
+    if (!map.getSize().x || !map.getSize().y) return;   // 地図に大きさがないときは動かさない
     var z = zoom || Math.max(map.getZoom(), 14), h = hidden();
     var p = map.project(latlng, z).subtract([h.x / 2, -h.y / 2]);
     map.flyTo(map.unproject(p, z), z, { duration: 0.6 });
@@ -332,7 +333,7 @@
         html += '<ol class="list">' + list.map(function (s) { return row(s); }).join("") + '</ol>';
         var b = L.latLngBounds(list.map(function (s) { return [s.la, s.lo]; }));
         var h = hidden();
-        map.flyToBounds(b, { paddingTopLeft: [h.x + 48, 120], paddingBottomRight: [48, h.y + 48], maxZoom: 13, duration: 0.6 });
+        if (map.getSize().x) map.flyToBounds(b, { paddingTopLeft: [h.x + 48, 120], paddingBottomRight: [48, h.y + 48], maxZoom: 13, duration: 0.6 });
       } else {
         html += '<p class="empty">このタイプの銭湯は、まだ書いていません。行って見つけたら書き足します。</p>';
       }
@@ -501,7 +502,7 @@
     draw();
     placeCtrls();
     var h0 = hidden();
-    map.fitBounds([[35.53, 139.28], [35.82, 139.9]], { paddingTopLeft: [h0.x, wide.matches ? 48 : 104], paddingBottomRight: [0, h0.y], animate: false });
+    if (map.getSize().x && map.getSize().y) map.fitBounds([[35.53, 139.28], [35.82, 139.9]], { paddingTopLeft: [h0.x, wide.matches ? 48 : 104], paddingBottomRight: [0, h0.y], animate: false });
     route();
     showLabels();
   }
