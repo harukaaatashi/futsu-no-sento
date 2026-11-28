@@ -155,7 +155,8 @@
     g.cells.forEach(function (c) { look.set(c[0] * W + c[1], c); });
     sento.forEach(function (s, i) { s.i = i; s.key = norm([s.name, s.kana, s.area, s.address, s.access].join(" ")); byId[s.id] = s; });
     types.forEach(function (t) { typeById[t.id] = t; });
-    var filter = null, current = null, navs = 0, openOnly = false;
+    var filter = null, current = null, navs = 0;
+    var F = {}, FAREA = "";   // 絞りこみの条件。F は条件の id → true、FAREA は区や市
 
     // 250m 四方ごとに、圏内は薄い青、圏外は黄色（人が多いほど濃く）で塗る
     var Grid = L.GridLayer.extend({
@@ -193,8 +194,7 @@
     // 銭湯の点。タイプがわかっている銭湯は大きく描く
     var dots = L.canvas({ padding: 0.3 });
     function look1(s) {
-      var st = openOnly ? status(s) : null;
-      var on = (!filter || (s.types || []).indexOf(filter) >= 0) && (!openOnly || (st && st.open)), typed = s.types && s.types.length;
+      var on = (!filter || (s.types || []).indexOf(filter) >= 0) && fmatch(s), typed = s.types && s.types.length;
       return { renderer: dots, radius: typed ? 8 : 5, weight: typed ? 3 : 1.5,
         fillColor: s.paused ? C.paper : s.src === "osm" ? C.sub : C.noren, color: s.paused ? C.sub : C.paper,
         fillOpacity: on ? 1 : 0.2, opacity: on ? 1 : 0.3 };
@@ -321,13 +321,102 @@
       return '<table class="week">' + rows.join("") + "</table>";
     }
 
+    // ---------- 絞りこみ ----------
+    var YEAR = jst().getFullYear();
+    function has(s, label) { return (s.services || []).indexOf(label) >= 0 || (s.features || []).indexOf(label) >= 0; }
+    function anyRange(s, test) { return !!(s.sched && Object.keys(s.sched.hours).some(function (k) { return s.sched.hours[k].some(test); })); }
     // 話を聞きに行く候補: 創業から60年以上たち、代替わりの話がまだ記事にない銭湯
+    function isVisit(s) { return s.src === "tokyo" && !s.paused && !!(s.hist && s.hist.founded && YEAR - s.hist.founded >= 60 && !s.hist.gen); }
+    function tag(label) { return function (s) { return has(s, label); }; }
+    var FGROUPS = [
+      ["営業", [
+        ["open", "いま営業中", function (s) { var st = status(s); return !!(st && st.open); }],
+        ["morning", "朝10時より前に開く日がある", function (s) { return anyRange(s, function (r) { return r[0] < 600; }); }],
+        ["late", "夜中の1時を過ぎても開いている日がある", function (s) { return anyRange(s, function (r) { return r[1] > 1500; }); }]]],
+      ["歩み", [
+        ["old", "創業から60年以上", function (s) { return !!(s.hist && s.hist.founded && YEAR - s.hist.founded >= 60); }],
+        ["handed", "代替わりしている", function (s) { return !!(s.hist && s.hist.gen >= 2); }],
+        ["nogen", "代替わりがまだわからない", function (s) { return s.src === "tokyo" && !(s.hist && s.hist.gen); }],
+        ["visit", "話を聞きに行く候補", isVisit]]],
+      ["支えるときの目安", [
+        ["only10k", "なくなると10分で銭湯に行けなくなる人が1万人以上", function (s) { return s.only >= 10000; }],
+        ["only", "なくなると10分で銭湯に行けなくなる人がいる", function (s) { return s.only > 0; }]]],
+      ["建物と内装", [
+        ["miya", "宮造り", tag("宮造り建築")], ["paint", "ペンキ絵", tag("ペンキ絵")],
+        ["tile", "タイル絵", function (s) { return has(s, "モザイクタイル絵（浴室）") || has(s, "浴室のタイル絵"); }],
+        ["geta", "木の下足札", tag("木の下足札")], ["bandai", "番台", tag("番台")], ["maki", "薪で沸かす", tag("薪")]]],
+      ["お風呂", [
+        ["sauna", "サウナ", tag("サウナ")], ["rotenburo", "露天風呂", tag("露天風呂")], ["mizu", "水風呂", tag("水風呂")],
+        ["yaku", "薬湯", tag("薬湯")], ["onsen", "温泉", tag("温泉")]]],
+      ["使いやすさ", [
+        ["bf", "バリアフリー", tag("バリアフリー")], ["baby", "ベビーベッド", tag("ベビーベッド")], ["rest", "休憩室", tag("休憩室")],
+        ["laundry", "コインランドリー", tag("ランドリー")], ["park", "無料の駐車場", tag("駐車場（無料）")]]],
+      ["そのほか", [
+        ["photo", "写真がある", function (s) { return !!(s.photos && s.photos.length); }],
+        ["nopause", "休業中の銭湯を出さない", function (s) { return !s.paused; }]]]
+    ];
+    var FTEST = {};
+    FGROUPS.forEach(function (g) { g[1].forEach(function (o) { FTEST[o[0]] = o[2]; }); });
+    function fmatch(s, extra) {
+      for (var id in F) if (F[id] && !FTEST[id](s)) return false;
+      if (extra && !FTEST[extra](s)) return false;
+      return !FAREA || s.area === FAREA;
+    }
+    function factive() { return Object.keys(F).filter(function (k) { return F[k]; }).length + (FAREA ? 1 : 0); }
+    var AREAS = sento.reduce(function (a, s) { if (s.area && a.indexOf(s.area) < 0) a.push(s.area); return a; }, [])
+      .sort(function (a, b) { return (/区$/.test(b) - /区$/.test(a)) || a.localeCompare(b, "ja"); });
+
+    function showFilters() {
+      current = null; unmark();
+      var html = head("絞りこむ") + '<p class="lead-s">選んだ条件を、すべて満たす銭湯だけを地図に出します。</p>';
+      FGROUPS.forEach(function (g) {
+        html += '<fieldset class="fg"><legend>' + g[0] + '</legend><div class="fopts">' + g[1].map(function (o) {
+          return '<label class="fopt"><input type="checkbox" data-f="' + o[0] + '"' + (F[o[0]] ? " checked" : "") + '><span>' + o[1] + '<b class="fn" data-fn="' + o[0] + '"></b></span></label>';
+        }).join("") + "</div></fieldset>";
+      });
+      html += '<fieldset class="fg"><legend>区や市</legend><select class="fsel" data-farea aria-label="区や市を選ぶ"><option value="">すべての区と市</option>' +
+        AREAS.map(function (a) { return '<option' + (a === FAREA ? " selected" : "") + ">" + esc(a) + "</option>"; }).join("") + "</select></fieldset>";
+      html += '<div class="fbar"><button class="btn primary" type="button" data-fshow></button><button class="btn" type="button" data-fclear>条件を消す</button></div>';
+      html += '<ol class="list" id="flist"></ol>';
+      show(html, "絞りこみの条件を選べます");
+      fupdate();
+      lift();
+    }
+    // 条件が変わったら、地図、数、一覧、上のボタンをそろえる
+    function fupdate() {
+      restyle();
+      var hits = sento.filter(function (s) { return fmatch(s); });
+      var n = factive();
+      var chip = document.querySelector("[data-filters]");
+      if (chip) { chip.setAttribute("aria-pressed", n ? "true" : "false"); chip.querySelector(".badge").textContent = n ? n : ""; }
+      var oc = document.querySelector("[data-open]");
+      if (oc) oc.setAttribute("aria-pressed", F.open ? "true" : "false");
+      var bar = body.querySelector("[data-fshow]");
+      if (!bar) return;
+      bar.textContent = hits.length + "軒を地図で見る";
+      bar.disabled = !hits.length;
+      body.querySelectorAll("[data-fn]").forEach(function (el) {
+        var id = el.dataset.fn;
+        el.textContent = F[id] ? "" : sento.filter(function (s) { return fmatch(s, id); }).length;
+      });
+      $("flist").innerHTML = hits.length
+        ? hits.slice(0, 60).map(function (s) { return row(s); }).join("") + (hits.length > 60 ? '<li class="more-n">ほかに' + (hits.length - 60) + "軒あります。地図で見てください。</li>" : "")
+        : '<li class="empty">当てはまる銭湯はありません。条件を減らしてみてください。</li>';
+      draw();
+      $("live").textContent = hits.length + "軒が当てはまります";
+    }
+    body.addEventListener("change", function (ev) {
+      var t = ev.target;
+      if (t.dataset.f) { if (t.checked) F[t.dataset.f] = true; else delete F[t.dataset.f]; fupdate(); }
+      if (t.hasAttribute("data-farea")) { FAREA = t.value; fupdate(); }
+    });
+
     function visitBlock() {
-      var y = jst().getFullYear();
+      var y = YEAR;
       var all = sento.filter(function (s) { return s.src === "tokyo" && !s.paused; });
       var known = all.filter(function (s) { return s.hist && s.hist.founded; }).length;
       var gens = all.filter(function (s) { return s.hist && s.hist.gen; }).length;
-      var list = all.filter(function (s) { return s.hist && s.hist.founded && y - s.hist.founded >= 60 && !s.hist.gen; })
+      var list = all.filter(isVisit)
         .sort(function (a, b) { return b.only - a.only; });
       return '<section class="blk"><h2>話を聞きに行く候補</h2>' +
         '<p>創業から60年以上たっていて、代替わりの話がまだ記事に出てこない銭湯です。右の下の数は、その銭湯がなくなると10分で銭湯に行けなくなる人の数で、多い順に並べました。</p>' +
@@ -348,7 +437,9 @@
           '<span class="bar" role="img" aria-label="10分圏内に住む人は' + share.toFixed(0) + '%"><i style="width:' + share.toFixed(1) + '%"></i></span>' +
           '<span class="out">圏外に<b>' + num(t.pop - t.in) + '</b>人</span></button></li>';
       };
+      var fn = factive();
       show(
+        (fn ? '<button class="fnow" type="button" data-go="f">' + icon("sliders-horizontal") + '<span>' + fn + 'つの条件で絞りこんでいます。' + sento.filter(function (x) { return fmatch(x); }).length + '軒が当てはまります</span>' + icon("chevron-right") + '</button>' : "") +
         '<h1 class="h1"><span>東京で、</span><span>自転車10分以内に</span><span>銭湯がある人は</span></h1>' +
         '<p class="big"><b>' + pct.toFixed(0) + '<small>%</small></b><span>残りの' + man(S.out) + '人は、<br>10分では着きません。</span></p>' +
         '<div class="split" role="img" aria-label="圏内が' + pct.toFixed(0) + '%、圏外が' + (100 - pct).toFixed(0) + '%"><i style="width:' + pct.toFixed(1) + '%"></i><em></em></div>' +
@@ -538,13 +629,24 @@
       if ((m = h.match(/^s=(.+)$/)) && byId[m[1]]) return showSento(byId[m[1]]);
       if ((m = h.match(/^q=(.+)$/))) { if (input.value !== m[1]) input.value = m[1]; $("clear").hidden = false; return showResults(m[1]); }
       if (f) return showType(f);
+      if (h === "f") return showFilters();
       showHome();
     }
     window.addEventListener("hashchange", route);
 
     body.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-go],[data-fly],[data-back],[data-share]");
+      var b = ev.target.closest("[data-go],[data-fly],[data-back],[data-share],[data-fshow],[data-fclear]");
       if (!b) return;
+      if (b.hasAttribute("data-fclear")) { F = {}; FAREA = ""; showFilters(); return; }
+      if (b.hasAttribute("data-fshow")) {
+        var hits = sento.filter(function (x) { return fmatch(x); });
+        if (hits.length && map.getSize().x) {
+          var hh = hidden();
+          if (!wide.matches) { setState("peek"); hh = { x: 0, y: 136 }; }
+          map.flyToBounds(L.latLngBounds(hits.map(function (x) { return [x.la, x.lo]; })), { paddingTopLeft: [hh.x + 48, 120], paddingBottomRight: [48, hh.y + 48], maxZoom: 15, duration: 0.6 });
+        }
+        return;
+      }
       if (b.dataset.go) return go(b.dataset.go);
       if (b.dataset.fly) { var p = b.dataset.fly.split(","); focus([+p[0], +p[1]], 13); if (!wide.matches) setState("peek"); return; }
       if (b.hasAttribute("data-back")) {
@@ -559,17 +661,20 @@
     });
 
     // 上のボタンで、タイプを絞る。もう一度押すと全部に戻る
-    $("chips").innerHTML = '<button class="chip open-chip" type="button" aria-pressed="false" data-open>' + icon("clock") + 'いま営業中</button>' + types.map(function (t) {
+    $("chips").innerHTML = '<button class="chip filter-chip" type="button" aria-pressed="false" data-filters>' + icon("sliders-horizontal") + '絞りこむ<span class="badge"></span></button>' +
+      '<button class="chip open-chip" type="button" aria-pressed="false" data-open>' + icon("clock") + 'いま営業中</button>' + types.map(function (t) {
       return '<button class="chip" type="button" aria-pressed="false" data-type="' + t.id + '">' + icon(t.icon) + esc(t.name) + '</button>';
     }).join("");
     $("chips").addEventListener("click", function (ev) {
       var b = ev.target.closest(".chip");
+      if (b && b.hasAttribute("data-filters")) { go("f"); return; }
       if (b && b.hasAttribute("data-open")) {
-        openOnly = !openOnly;
-        b.setAttribute("aria-pressed", openOnly ? "true" : "false");
-        restyle();
-        var n = sento.filter(function (x) { var st = status(x); return st && st.open; }).length;
-        toast(openOnly ? "いま営業中の銭湯は" + n + "軒です" : "すべての銭湯を出しています");
+        if (F.open) delete F.open; else F.open = true;
+        fupdate();
+        var cb = body.querySelector('[data-f="open"]');
+        if (cb) cb.checked = !!F.open;
+        var n = sento.filter(function (x) { return fmatch(x); }).length;
+        toast(F.open ? "いま営業中の銭湯は" + n + "軒です" : (factive() ? n + "軒を出しています" : "すべての銭湯を出しています"));
         return;
       }
       if (b) go(b.dataset.type === filter ? "" : "t=" + b.dataset.type);
@@ -614,7 +719,7 @@
       }, { enableHighAccuracy: true, timeout: 10000 });
     });
 
-    setInterval(function () { if (openOnly) restyle(); }, 60000);
+    setInterval(function () { if (F.open) restyle(); }, 60000);
     draw();
     placeCtrls();
     var h0 = hidden();
