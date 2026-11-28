@@ -429,3 +429,10 @@ details.hours summary::marker { color: var(--sub); }
 .nophoto svg { width: var(--s5); height: var(--s5); flex: none; }
 .nophoto:hover { background: var(--water); }
 @media (min-width: 760px) { .photos-s { margin: 0 calc(var(--s6) * -1) var(--s2); padding: 0 var(--s6); scroll-padding-inline: var(--s6); } }
+
+/* この銭湯の歩み */
+.hist { display: grid; gap: var(--s1); }
+.hist div { display: grid; grid-template-columns: 5em 1fr; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--grout); }
+.hist dt { color: var(--sub); font-size: var(--t-xs); padding-top: 2px; }
+.hist dd { margin: 0; font-variant-numeric: tabular-nums; }
+.row-n2 { display: block; font-size: var(--t-xs); color: var(--sub); white-space: nowrap; }

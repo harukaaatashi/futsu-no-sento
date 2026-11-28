@@ -286,6 +286,7 @@
     // { open: 開いているか, text: 出す言葉 }。読めない銭湯は null
     function status(s) {
       var sc = s.sched;
+      if (s.hist && s.hist.closedUntil) return { open: false, text: "改装のため休み。" + s.hist.closedUntil + "まで" };
       if (!sc || s.paused) return null;
       var now = jst(), m = now.getHours() * 60 + now.getMinutes();
       var y = new Date(now); y.setDate(now.getDate() - 1);
@@ -304,7 +305,7 @@
     function statusLine(s) {
       var st = status(s);
       if (!st) return s.paused ? "" : '<p class="now-st shut">いま開いているかは、組合のページで確かめてください</p>';
-      return '<p class="now-st ' + (st.open ? "on" : "shut") + '">' + st.text + (s.sched.odd ? '<span class="odd">不定休があります</span>' : "") + "</p>";
+      return '<p class="now-st ' + (st.open ? "on" : "shut") + '">' + esc(st.text) + (s.sched && s.sched.odd ? '<span class="odd">不定休があります</span>' : "") + "</p>";
     }
     // 曜日ごとの営業時間の表。月曜から並べ、きょうの行を太くする
     function weekTable(s) {
@@ -318,6 +319,22 @@
       });
       if (sc.hours.h) rows.push('<tr><th scope="row">祝日</th><td>' + sc.hours.h.map(function (r) { return hm(r[0]) + "〜" + (r[1] > 1440 ? "夜中の" : "") + hm(r[1]); }).join("、") + "</td></tr>");
       return '<table class="week">' + rows.join("") + "</table>";
+    }
+
+    // 話を聞きに行く候補: 創業から60年以上たち、代替わりの話がまだ記事にない銭湯
+    function visitBlock() {
+      var y = jst().getFullYear();
+      var all = sento.filter(function (s) { return s.src === "tokyo" && !s.paused; });
+      var known = all.filter(function (s) { return s.hist && s.hist.founded; }).length;
+      var gens = all.filter(function (s) { return s.hist && s.hist.gen; }).length;
+      var list = all.filter(function (s) { return s.hist && s.hist.founded && y - s.hist.founded >= 60 && !s.hist.gen; })
+        .sort(function (a, b) { return b.only - a.only; });
+      return '<section class="blk"><h2>話を聞きに行く候補</h2>' +
+        '<p>創業から60年以上たっていて、代替わりの話がまだ記事に出てこない銭湯です。右の下の数は、その銭湯がなくなると10分で銭湯に行けなくなる人の数で、多い順に並べました。</p>' +
+        '<ol class="list">' + list.map(function (s) {
+          return row(s, '<span class="row-n"><b>' + (y - s.hist.founded + 1) + '</b>年目<span class="row-n2">' + num(s.only) + '人</span></span>');
+        }).join("") + '</ol>' +
+        '<p class="note">創業の年がわかる銭湯は' + known + '軒、何代目かがわかる銭湯は' + gens + '軒です。組合のサイトの、店主に話を聞いた記事から取り出しました。記事のない銭湯や、書かれていないことは、行って聞いたら書き足します。</p></section>';
     }
 
     function showHome() {
@@ -343,6 +360,7 @@
           return '<li><button class="type" type="button" data-go="t=' + t.id + '">' + icon(t.icon) + '<span><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></span><b>' + t.count + '軒</b></button></li>';
         }).join("") + '</ul></section>' +
 
+        visitBlock() +
         '<section class="blk"><h2>なくなると、10分で行ける銭湯がなくなる人が多い銭湯</h2>' +
         '<p>その銭湯のほかに、10分で行ける銭湯がない人の数です。この銭湯がなくなると、その人たちは圏外になります。</p>' +
         '<ol class="list">' + rank.map(function (s) {
@@ -413,6 +431,21 @@
       }).join("") + '</ul>' + '<a class="morephoto" href="' + esc(gq) + '" target="_blank" rel="noopener">Googleマップでほかの写真を見る</a>';
     }
 
+    // 創業から何年か、何代目か、代替わりしたか。記事で裏が取れたものだけ
+    function histBlock(s) {
+      var h = s.hist;
+      if (s.src !== "tokyo") return "";
+      var html = '<section class="blk"><h3>この銭湯の歩み</h3>';
+      if (!h || !(h.founded || h.gen || h.renewal)) return html + '<p class="empty-s">創業や代替わりは、まだわかりません。行って聞いたら書き足します。</p></section>';
+      var rows = [];
+      if (h.founded) rows.push(["創業", esc(h.foundedText || "") + (h.foundedText ? "、" : "") + h.founded + "年。ことしで" + (jst().getFullYear() - h.founded + 1) + "年目"]);
+      if (h.gen) rows.push(["代替わり", h.gen >= 2 ? h.gen + "代目まで続いています" : "創業した人が続けています"]);
+      if (h.renewal) rows.push(["改装", h.renewal + "年"]);
+      html += '<dl class="hist">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
+      html += '<p class="note">' + (url(h.src) ? '<a href="' + url(h.src) + '" target="_blank" rel="noopener">' + esc(h.srcName || "組合のサイトの記事") + "</a>" : esc(h.srcName || "")) + (h.date ? "、" + esc(h.date) + "時点" : "") + "</p>";
+      return html + "</section>";
+    }
+
     function showSento(s) {
       current = s; mark(s);
       var nx = sento[s.next[0]];
@@ -456,6 +489,7 @@
         (nx ? '<button class="row near" type="button" data-go="s=' + esc(nx.id) + '">' + icon("bath") + '<span class="row-main"><span class="row-sub">いちばん近いほかの銭湯</span><strong>' + esc(nx.name) + '</strong></span><span class="row-n">直線で' + km(s.next[1]) + '</span></button>' : "") +
         '</section>';
 
+      html += histBlock(s);
       html += '<section class="blk"><h3>いい普通の銭湯のタイプ</h3>';
       if ((s.notes || []).length) {
         html += s.notes.map(function (n) {

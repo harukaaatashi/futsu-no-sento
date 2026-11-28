@@ -438,6 +438,8 @@ if (ROOT / 'data/map/sento.json').exists():
     sento = json.loads((ROOT / 'data/map/sento.json').read_text(encoding='utf-8'))
     tdata = json.loads((ROOT / 'data/map/types.json').read_text(encoding='utf-8'))
     tids = {t['id'] for t in tdata['types']}
+    hist_path = ROOT / 'data/map/history.json'
+    hist = json.loads(hist_path.read_text(encoding='utf-8')) if hist_path.exists() else {}
     photos_path = ROOT / 'data/map/photos.json'
     photos = json.loads(photos_path.read_text(encoding='utf-8')) if photos_path.exists() else {}
     for x in sento:
@@ -445,6 +447,9 @@ if (ROOT / 'data/map/sento.json').exists():
         x.pop('notes', None)
         x.pop('photos', None)
         x.pop('sched', None)
+        x.pop('hist', None)
+        if hist.get(x['id']):
+            x['hist'] = hist[x['id']]                  # 創業の年、何代目か、改装の年と、その出どころ
         if x['src'] == 'tokyo':
             sc = schedule(x.get('hours', ''), x.get('closed', ''))
             if sc:
