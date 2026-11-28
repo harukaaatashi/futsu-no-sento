@@ -239,16 +239,17 @@
       return '<div class="vh"><button class="icon-btn" type="button" data-back aria-label="戻る">' + icon("arrow-left") + '</button><span>' + title + '</span></div>';
     }
     function typeIcons(s) {
-      return (s.types || []).map(function (id) { var t = typeById[id]; return t ? '<span class="ti" title="' + esc(t.name) + '">' + icon(t.icon) + '</span>' : ""; }).join("");
+      return (s.types || []).map(function (id) { var t = typeById[id]; return t ? '<span class="ti" title="' + esc(t.name) + '"><span class="sr">' + esc(t.name) + '</span>' + icon(t.icon) + '</span>' : ""; }).join("");
     }
     function rowStatus(s) {
       var st = status(s);
       return st ? '<span class="row-open ' + (st.open ? "on" : "shut") + '">' + st.text + "</span>" : "";
     }
-    function row(s, extra) {
-      return '<li><button class="row" type="button" data-go="s=' + esc(s.id) + '"><span class="row-main"><strong>' + esc(s.name) + '</strong>' +
-        '<span class="row-sub">' + esc(s.area || "都の外") + (s.access ? "、" + esc(s.access) : "") + '</span>' + rowStatus(s) + '</span>' +
-        (extra || '<span class="row-icons">' + typeIcons(s) + '</span>') + '</button></li>';
+    // 銭湯の一覧の 1 行。右には見出しが指す数を 1 つ（v と単位 u）、補足は左の 2 行目（note）
+    function row(s, v, u, note) {
+      return '<li><button class="row" type="button" data-go="s=' + esc(s.id) + '"><span class="row-main"><strong>' + esc(s.name) + typeIcons(s) + '</strong>' +
+        '<span class="row-sub">' + esc(note || ((s.area || "都の外") + (s.access ? "、" + s.access : ""))) + '</span>' + rowStatus(s) + '</span>' +
+        (v != null ? '<span class="row-n"><b>' + v + '</b>' + u + '</span>' : "") + '</button></li>';
     }
 
     // ---------- いま開いているか ----------
@@ -338,6 +339,7 @@
         ["handed", "代替わりしている", function (s) { return !!(s.hist && s.hist.gen >= 2); }],
         ["nogen", "代替わりがまだわからない", function (s) { return s.src === "tokyo" && !(s.hist && s.hist.gen); }],
         ["visit", "話を聞きに行く候補", isVisit]]],
+      ["いい普通の銭湯のタイプ", types.map(function (t) { return ["type-" + t.id, t.name, function (s) { return (s.types || []).indexOf(t.id) >= 0; }]; })],
       ["支えるときの目安", [
         ["only10k", "なくなると10分で銭湯に行けなくなる人が1万人以上", function (s) { return s.only >= 10000; }],
         ["only", "なくなると10分で銭湯に行けなくなる人がいる", function (s) { return s.only > 0; }]]],
@@ -370,7 +372,8 @@
       current = null; unmark();
       var html = head("絞りこむ") + '<p class="lead-s">選んだ条件を、すべて満たす銭湯だけを地図に出します。</p>';
       FGROUPS.forEach(function (g) {
-        html += '<fieldset class="fg"><legend>' + g[0] + '</legend><div class="fopts">' + g[1].map(function (o) {
+        html += '<fieldset class="fg"><legend>' + g[0] + '</legend>' +
+          (g[0] === "いい普通の銭湯のタイプ" ? '<p class="fdesc">なるが持ち寄った例から置いた4つのタイプです。資料で裏が取れた銭湯にだけつけています。行って見つけたら書き足します。</p>' : "") + '<div class="fopts">' + g[1].map(function (o) {
           return '<label class="fopt"><input type="checkbox" data-f="' + o[0] + '"' + (F[o[0]] ? " checked" : "") + '><span>' + o[1] + '<b class="fn" data-fn="' + o[0] + '"></b></span></label>';
         }).join("") + "</div></fieldset>";
       });
@@ -391,13 +394,17 @@
       if (chip) { chip.setAttribute("aria-pressed", n ? "true" : "false"); chip.querySelector(".badge").textContent = n ? n : ""; }
       var oc = document.querySelector("[data-open]");
       if (oc) oc.setAttribute("aria-pressed", F.open ? "true" : "false");
+      var vc = document.querySelector("[data-visit]");
+      if (vc) vc.setAttribute("aria-pressed", F.visit ? "true" : "false");
       var bar = body.querySelector("[data-fshow]");
       if (!bar) return;
       bar.textContent = hits.length + "軒を地図で見る";
       bar.disabled = !hits.length;
       body.querySelectorAll("[data-fn]").forEach(function (el) {
         var id = el.dataset.fn;
-        el.textContent = F[id] ? "" : sento.filter(function (s) { return fmatch(s, id); }).length;
+        var c = F[id] ? "" : sento.filter(function (s) { return fmatch(s, id); }).length;
+        el.textContent = c;
+        el.closest(".fopt").classList.toggle("zero", c === 0);
       });
       $("flist").innerHTML = hits.length
         ? hits.slice(0, 60).map(function (s) { return row(s); }).join("") + (hits.length > 60 ? '<li class="more-n">ほかに' + (hits.length - 60) + "軒あります。地図で見てください。</li>" : "")
@@ -411,57 +418,51 @@
       if (t.hasAttribute("data-farea")) { FAREA = t.value; fupdate(); }
     });
 
-    function visitBlock() {
-      var y = YEAR;
-      var all = sento.filter(function (s) { return s.src === "tokyo" && !s.paused; });
-      var known = all.filter(function (s) { return s.hist && s.hist.founded; }).length;
-      var gens = all.filter(function (s) { return s.hist && s.hist.gen; }).length;
-      var list = all.filter(isVisit)
-        .sort(function (a, b) { return b.only - a.only; });
-      return '<section class="blk"><h2>話を聞きに行く候補</h2>' +
-        '<p>創業から60年以上たっていて、代替わりの話がまだ記事に出てこない銭湯です。右の下の数は、その銭湯がなくなると10分で銭湯に行けなくなる人の数で、多い順に並べました。</p>' +
-        '<ol class="list">' + list.map(function (s) {
-          return row(s, '<span class="row-n"><b>' + (y - s.hist.founded + 1) + '</b>年目<span class="row-n2">' + num(s.only) + '人</span></span>');
-        }).join("") + '</ol>' +
-        '<p class="note">創業の年がわかる銭湯は' + known + '軒、何代目かがわかる銭湯は' + gens + '軒です。組合のサイトの、店主に話を聞いた記事から取り出しました。記事のない銭湯や、書かれていないことは、行って聞いたら書き足します。</p></section>';
+    // 一覧の中身。最初の欄では上位 5 件、「すべて見る」で全部
+    function lossList() {
+      return sento.filter(function (s) { return s.src === "tokyo" && !s.paused && s.only > 0; }).sort(function (a, b) { return b.only - a.only; });
+    }
+    function visitList() { return sento.filter(isVisit).sort(function (a, b) { return b.only - a.only; }); }
+    function townRow(t) {
+      var share = t.in / t.pop * 100;
+      return '<li><button class="town" type="button" data-fly="' + t.lat + "," + t.lon + '"><strong>' + esc(t.name) + '</strong>' +
+        '<span class="bar" role="img" aria-label="10分圏内に住む人は' + share.toFixed(0) + '%"><i style="width:' + share.toFixed(1) + '%"></i></span>' +
+        '<span class="out"><b>' + num(t.pop - t.in) + '</b>人</span></button></li>';
+    }
+    function lossRow(s) { return row(s, num(s.only), "人"); }
+    function visitRow(s) { return row(s, num(s.only), "人", (s.area || "") + "、創業から" + (YEAR - s.hist.founded + 1) + "年目"); }
+    var LISTS = {
+      towns: ["空白が大きい区と市", "10分圏の外に住む人が多い順です。押すと、地図がその場所に動きます。棒の青は圏内、黄色は圏外です。", function () { return S.towns; }, townRow, "towns"],
+      loss: ["なくなると空白が広がる銭湯", "その銭湯がなくなると、10分で銭湯に行けなくなる人の数です。多い順に並べました。", lossList, lossRow, "list"],
+      visit: ["話を聞きに行く候補", "創業から60年以上たっていて、代替わりの話がまだ記事に出てこない銭湯です。なくなると10分で銭湯に行けなくなる人が多い順に並べました。", visitList, visitRow, "list"]
+    };
+    function block(id) {
+      var L_ = LISTS[id], items = L_[2]();
+      return '<section class="blk"><h2>' + L_[0] + '</h2><p>' + L_[1] + '</p><ol class="' + L_[4] + '">' + items.slice(0, 5).map(L_[3]).join("") + '</ol>' +
+        (items.length > 5 ? '<button class="seeall" type="button" data-go="l=' + id + '">すべて見る<span>' + items.length + (id === "towns" ? "の区市町村" : "軒") + '</span>' + icon("chevron-right") + '</button>' : "") + '</section>';
+    }
+    function showList(id) {
+      current = null; unmark();
+      var L_ = LISTS[id], items = L_[2]();
+      var onMap = id === "visit" ? "visit" : id === "loss" ? "only" : "";
+      show(head(L_[0]) + '<p class="lead-s">' + L_[1] + '</p>' +
+        (onMap ? '<button class="btn primary wide" type="button" data-onmap="' + onMap + '">' + icon("map") + 'この' + items.length + '軒を地図に出す</button>' : "") +
+        '<ol class="' + L_[4] + '">' + items.map(L_[3]).join("") + '</ol>' +
+        (id === "visit" ? '<p class="note">創業の年がわかる銭湯は' + sento.filter(function (x) { return x.hist && x.hist.founded; }).length + '軒、何代目かがわかる銭湯は' + sento.filter(function (x) { return x.hist && x.hist.gen; }).length + '軒です。組合のサイトの、店主に話を聞いた記事から取り出しました。</p>' : ""), L_[0]);
+      lift();
     }
 
     function showHome() {
       current = null; unmark();
       var pct = S.in / S.pop * 100;
-      var rank = sento.filter(function (s) { return s.src === "tokyo" && !s.paused; }).sort(function (a, b) { return b.only - a.only; }).slice(0, 10);
-      var top = rank[0].only;
-      var townRow = function (t) {
-        var share = t.in / t.pop * 100;
-        return '<li><button class="town" type="button" data-fly="' + t.lat + "," + t.lon + '"><strong>' + esc(t.name) + '</strong>' +
-          '<span class="bar" role="img" aria-label="10分圏内に住む人は' + share.toFixed(0) + '%"><i style="width:' + share.toFixed(1) + '%"></i></span>' +
-          '<span class="out">圏外に<b>' + num(t.pop - t.in) + '</b>人</span></button></li>';
-      };
       var fn = factive();
       show(
         (fn ? '<button class="fnow" type="button" data-go="f">' + icon("sliders-horizontal") + '<span>' + fn + 'つの条件で絞りこんでいます。' + sento.filter(function (x) { return fmatch(x); }).length + '軒が当てはまります</span>' + icon("chevron-right") + '</button>' : "") +
         '<h1 class="h1"><span>東京で、</span><span>自転車10分以内に</span><span>銭湯がある人は</span></h1>' +
         '<p class="big"><b>' + pct.toFixed(0) + '<small>%</small></b><span>残りの' + man(S.out) + '人は、<br>10分では着きません。</span></p>' +
         '<div class="split" role="img" aria-label="圏内が' + pct.toFixed(0) + '%、圏外が' + (100 - pct).toFixed(0) + '%"><i style="width:' + pct.toFixed(1) + '%"></i><em></em></div>' +
-        '<ul class="map-key" aria-label="地図の見方"><li><i class="k-dot"></i>銭湯</li><li><i class="k-dot paused"></i>休業中の銭湯</li><li><i class="k-in"></i>10分圏内。行ける銭湯が多いほど濃い</li><li><i class="k-out"></i>10分圏の外。住む人が多いほど濃い</li></ul>' +
-
-        '<section class="blk"><h2>いい普通の銭湯のタイプ</h2>' +
-        '<p>なるが持ち寄った例から、4つのタイプを置きました。資料で裏が取れた銭湯にだけ、タイプをつけています。押すと、そのタイプの銭湯だけを地図に出します。</p>' +
-        '<ul class="types">' + types.map(function (t) {
-          return '<li><button class="type" type="button" data-go="t=' + t.id + '">' + icon(t.icon) + '<span><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></span><b>' + t.count + '軒</b></button></li>';
-        }).join("") + '</ul></section>' +
-
-        visitBlock() +
-        '<section class="blk"><h2>なくなると、10分で行ける銭湯がなくなる人が多い銭湯</h2>' +
-        '<p>その銭湯のほかに、10分で行ける銭湯がない人の数です。この銭湯がなくなると、その人たちは圏外になります。</p>' +
-        '<ol class="list">' + rank.map(function (s) {
-          return row(s, '<span class="row-n"><b>' + num(s.only) + '</b>人<span class="bar thin"><i style="width:' + (s.only / top * 100).toFixed(1) + '%"></i></span></span>');
-        }).join("") + '</ol></section>' +
-
-        '<section class="blk"><h2>圏外の人が多い区と市</h2><p>押すと、地図がその場所に動きます。青が圏内、黄色が圏外です。</p>' +
-        '<ol class="towns">' + S.towns.slice(0, 10).map(townRow).join("") + '</ol>' +
-        '<details class="more"><summary>残りの' + (S.towns.length - 10) + 'の区市町村も見る</summary><ol class="towns">' + S.towns.slice(10).map(townRow).join("") + '</ol></details></section>' +
-
+        '<p class="split-key"><span>10分圏内 ' + man(S.in) + '人</span><span>10分圏の外 ' + man(S.out) + '人</span></p>' +
+        block("towns") + block("loss") + block("visit") +
         '<details class="more blk"><summary>数え方と、まだ粗いところ</summary><ul class="caveats">' +
         '<li>自転車で10分を、直線で1.5kmと置きました。時速12kmで走ると道のりは2kmで、道は直線より3割ほど遠回りになる、という仮の計算です。坂や川、線路は見ていません。</li>' +
         '<li>人口は、2020年の国勢調査を250m四方に区切ったものです。島は入れていません。</li>' +
@@ -469,7 +470,7 @@
         '<li>このうち、一覧で休業中になっている' + S.sento_paused + '軒は、10分圏の数に入れていません。</li>' +
         '<li>都の外の銭湯は、OpenStreetMapにある' + S.sento_around + '軒を使いました。都内の一覧より抜けが多く、県境の近くでは圏外が多めに出ているはずです。</li>' +
         '<li>いい銭湯かどうか、これからも続きそうかどうかは、まだ見ていません。</li></ul>' +
-        '<p class="note">出どころは、<a href="https://www.e-stat.go.jp/gis">e-Statの地図で見る統計</a>、<a href="https://www.1010.or.jp/map/">東京銭湯マップ</a>、<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>、<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>です。</p></details>' +
+        '<p class="note">出どころは、<a href="https://www.e-stat.go.jp/gis">e-Statの地図で見る統計</a>、<a href="https://www.1010.or.jp/map/">東京銭湯マップ</a>、<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>、<a href="https://github.com/gsi-cyberjapan/optimal_bvmap">国土地理院最適化ベクトルタイル</a>、<a href="https://commons.wikimedia.org/">Wikimedia Commons</a>です。</p></details>' +
         '<p class="foot"><a href="index.html">全体のページに戻る</a></p>'
       );
     }
@@ -522,24 +523,32 @@
       }).join("") + '</ul>' + '<a class="morephoto" href="' + esc(gq) + '" target="_blank" rel="noopener">Googleマップでほかの写真を見る</a>';
     }
 
-    // 創業から何年か、何代目か、代替わりしたか。記事で裏が取れたものだけ
-    function histBlock(s) {
-      var h = s.hist;
-      if (s.src !== "tokyo") return "";
-      var html = '<section class="blk"><h3>この銭湯の歩み</h3>';
-      if (!h || !(h.founded || h.gen || h.renewal)) return html + '<p class="empty-s">創業や代替わりは、まだわかりません。行って聞いたら書き足します。</p></section>';
-      var rows = [];
-      if (h.founded) rows.push(["創業", esc(h.foundedText || "") + (h.foundedText ? "、" : "") + h.founded + "年。ことしで" + (jst().getFullYear() - h.founded + 1) + "年目"]);
-      if (h.gen) rows.push(["代替わり", h.gen >= 2 ? h.gen + "代目まで続いています" : "創業した人が続けています"]);
-      if (h.renewal) rows.push(["改装", h.renewal + "年"]);
-      html += '<dl class="hist">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
-      html += '<p class="note">' + (url(h.src) ? '<a href="' + url(h.src) + '" target="_blank" rel="noopener">' + esc(h.srcName || "組合のサイトの記事") + "</a>" : esc(h.srcName || "")) + (h.date ? "、" + esc(h.date) + "時点" : "") + "</p>";
-      return html + "</section>";
+    // この銭湯について: なくなると困る人、10分圏の人、創業、代替わり。わからないものは「まだわからない」と出す
+    function factsBlock(s) {
+      var nx = sento[s.next[0]];
+      var near = nx ? '<button class="row near" type="button" data-go="s=' + esc(nx.id) + '">' + icon("bath") + '<span class="row-main"><span class="row-sub">' + (s.paused ? "いちばん近い、開いている銭湯" : "いちばん近いほかの銭湯") + '</span><strong>' + esc(nx.name) + '</strong></span><span class="row-n">直線で' + km(s.next[1]) + '</span></button>' : "";
+      if (s.paused) return '<section class="blk"><h3>この銭湯について</h3>' + near + '</section>';
+      var h = s.hist || {}, tokyo = s.src === "tokyo";
+      var cells = [
+        ["なくなると10分で銭湯に行けなくなる人", '<b>' + num(s.only) + '</b>人'],
+        ["10分圏に住む人", '<b>' + num(s.reach) + '</b>人']
+      ];
+      if (tokyo) {
+        cells.push(["創業", h.founded ? '<b>' + (YEAR - h.founded + 1) + '</b>年目<small>' + esc(h.foundedText || "") + "、" + h.founded + "年</small>" : '<span class="unk">まだわからない</span>']);
+        cells.push(["代替わり", h.gen ? (h.gen >= 2 ? '<b>' + h.gen + '</b>代目まで' : "創業した人が続けている") : '<span class="unk">まだわからない</span>']);
+      }
+      var note = [];
+      if (h.renewal) note.push(h.renewal + "年に改装しています。");
+      if (h.src && url(h.src)) note.push('創業と代替わりは<a href="' + url(h.src) + '" target="_blank" rel="noopener">組合のサイトの記事</a>によります。');
+      else if (tokyo && !(h.founded || h.gen)) note.push("創業や代替わりは、行って聞いたら書き足します。");
+      note.push("地図の円は、ここから直線で1.5kmです。");
+      return '<section class="blk"><h3>この銭湯について</h3><dl class="facts4">' +
+        cells.map(function (c) { return "<div><dt>" + c[0] + "</dt><dd>" + c[1] + "</dd></div>"; }).join("") + "</dl>" +
+        '<p class="note">' + note.join("") + "</p>" + near + "</section>";
     }
 
     function showSento(s) {
       current = s; mark(s);
-      var nx = sento[s.next[0]];
       var gmap = "https://www.google.com/maps/dir/?api=1&destination=" + s.la + "," + s.lo;
       var html = head("銭湯") + photoStrip(s) +
         '<h2 class="name">' + esc(s.name) + '</h2>' +
@@ -555,6 +564,7 @@
           : '<a class="act" href="' + url(s.url) + '" target="_blank" rel="noopener"><span class="act-i">' + icon("external-link") + '</span>地図の元</a>') +
         '<button class="act" type="button" data-share><span class="act-i">' + icon("share-2") + '</span>リンクを送る</button></div>';
 
+      html += factsBlock(s);
       if (s.src === "tokyo") {
         var info = [
           ["map-pin", "住所", esc(s.address)],
@@ -566,30 +576,15 @@
           ["phone", "電話", s.tel ? '<a href="tel:' + esc(s.tel.replace(/[^\d+]/g, "")) + '">' + esc(s.tel) + "</a>" : ""],
           ["globe", "公式ページ", (s.links || []).map(function (l) { return url(l[1]) ? '<a href="' + url(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + "</a>" : ""; }).join("、")]
         ].filter(function (r) { return r[2]; });
-        html += '<ul class="info">' + info.map(function (r) { return '<li>' + icon(r[0]) + '<div><span class="sr">' + r[1] + '</span>' + r[2] + '</div></li>'; }).join("") + '</ul>';
+        html += '<section class="blk"><h3>行くとき</h3><ul class="info">' + info.map(function (r) { return '<li>' + icon(r[0]) + '<div><span class="sr">' + r[1] + '</span>' + r[2] + '</div></li>'; }).join("") + '</ul></section>';
       } else {
         html += '<p class="note">都の外の銭湯です。OpenStreetMapにある名前と位置だけで、くわしい中身はありません。</p>';
       }
-
-      if (s.paused) html += '<section class="blk"><h3>この銭湯のまわり</h3>' +
-        (nx ? '<button class="row near" type="button" data-go="s=' + esc(nx.id) + '">' + icon("bath") + '<span class="row-main"><span class="row-sub">いちばん近い、開いている銭湯</span><strong>' + esc(nx.name) + '</strong></span><span class="row-n">直線で' + km(s.next[1]) + '</span></button>' : "") + '</section>';
-      else html += '<section class="blk"><h3>この銭湯のまわり</h3><dl class="facts2">' +
-        '<div><dt>10分圏に住む人</dt><dd><b>' + num(s.reach) + '</b>人</dd></div>' +
-        '<div><dt>ほかに10分で行ける銭湯がない人</dt><dd><b>' + num(s.only) + '</b>人</dd></div></dl>' +
-        '<p class="note">' + (s.only ? "この銭湯がなくなると、" + num(s.only) + "人が10分で銭湯に行けなくなります。" : "この銭湯がなくなっても、まわりの人は10分でほかの銭湯に行けます。") + '円は、ここから直線で1.5kmです。</p>' +
-        (nx ? '<button class="row near" type="button" data-go="s=' + esc(nx.id) + '">' + icon("bath") + '<span class="row-main"><span class="row-sub">いちばん近いほかの銭湯</span><strong>' + esc(nx.name) + '</strong></span><span class="row-n">直線で' + km(s.next[1]) + '</span></button>' : "") +
-        '</section>';
-
-      html += histBlock(s);
-      html += '<section class="blk"><h3>いい普通の銭湯のタイプ</h3>';
       if ((s.notes || []).length) {
-        html += s.notes.map(function (n) {
-          return '<div class="tnote"><p>' + esc(n.what) + '</p><p class="note">' + (url(n.src) ? '<a href="' + url(n.src) + '" target="_blank" rel="noopener">' + esc(n.srcName) + '</a>' : esc(n.srcName)) + '' + (n.date ? '、<span class="nw">' + esc(n.date.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, "$1年$2月$3日")) + "の資料</span>" : "") + '</p></div>';
-        }).join("");
-      } else {
-        html += '<p class="empty-s">まだわかりません。行って確かめたら書き足します。</p>';
+        html += '<section class="blk"><h3>いい普通の銭湯のタイプ</h3>' + s.notes.map(function (n) {
+          return '<div class="tnote"><p>' + esc(n.what) + '</p><p class="note">' + (url(n.src) ? '<a href="' + url(n.src) + '" target="_blank" rel="noopener">' + esc(n.srcName) + '</a>' : esc(n.srcName)) + (n.date ? '、<span class="nw">' + esc(n.date.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, "$1年$2月$3日")) + "の資料</span>" : "") + '</p></div>';
+        }).join("") + '</section>';
       }
-      html += '</section>';
 
       var eq = (s.services || []).concat(s.features || []).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
       if (eq.length) html += '<section class="blk"><h3>設備</h3><ul class="eq">' + eq.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ul></section>';
@@ -630,13 +625,25 @@
       if ((m = h.match(/^q=(.+)$/))) { if (input.value !== m[1]) input.value = m[1]; $("clear").hidden = false; return showResults(m[1]); }
       if (f) return showType(f);
       if (h === "f") return showFilters();
+      if ((m = h.match(/^l=(towns|loss|visit)$/))) return showList(m[1]);
       showHome();
     }
     window.addEventListener("hashchange", route);
 
     body.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-go],[data-fly],[data-back],[data-share],[data-fshow],[data-fclear]");
+      var b = ev.target.closest("[data-go],[data-fly],[data-back],[data-share],[data-fshow],[data-fclear],[data-onmap]");
       if (!b) return;
+      if (b.dataset.onmap) {
+        F[b.dataset.onmap] = true; fupdate();
+        var on = sento.filter(function (x) { return fmatch(x); });
+        if (on.length && map.getSize().x) {
+          var hb = hidden();
+          if (!wide.matches) { setState("peek"); hb = { x: 0, y: 136 }; }
+          map.flyToBounds(L.latLngBounds(on.map(function (x) { return [x.la, x.lo]; })), { paddingTopLeft: [hb.x + 48, 120], paddingBottomRight: [48, hb.y + 48], maxZoom: 15, duration: 0.6 });
+        }
+        toast(on.length + "軒を地図に出しました。上の「絞りこむ」で条件を消せます");
+        return;
+      }
       if (b.hasAttribute("data-fclear")) { F = {}; FAREA = ""; showFilters(); return; }
       if (b.hasAttribute("data-fshow")) {
         var hits = sento.filter(function (x) { return fmatch(x); });
@@ -662,12 +669,19 @@
 
     // 上のボタンで、タイプを絞る。もう一度押すと全部に戻る
     $("chips").innerHTML = '<button class="chip filter-chip" type="button" aria-pressed="false" data-filters>' + icon("sliders-horizontal") + '絞りこむ<span class="badge"></span></button>' +
-      '<button class="chip open-chip" type="button" aria-pressed="false" data-open>' + icon("clock") + 'いま営業中</button>' + types.map(function (t) {
-      return '<button class="chip" type="button" aria-pressed="false" data-type="' + t.id + '">' + icon(t.icon) + esc(t.name) + '</button>';
-    }).join("");
+      '<button class="chip open-chip" type="button" aria-pressed="false" data-open>' + icon("clock") + 'いま営業中</button>' +
+      '<button class="chip" type="button" aria-pressed="false" data-visit>' + icon("message-circle") + '話を聞きに行く候補</button>';
     $("chips").addEventListener("click", function (ev) {
       var b = ev.target.closest(".chip");
       if (b && b.hasAttribute("data-filters")) { go("f"); return; }
+      if (b && b.hasAttribute("data-visit")) {
+        if (F.visit) delete F.visit; else F.visit = true;
+        fupdate();
+        var cv = body.querySelector('[data-f="visit"]');
+        if (cv) cv.checked = !!F.visit;
+        toast(F.visit ? "話を聞きに行く候補は" + sento.filter(function (x) { return fmatch(x); }).length + "軒です" : (factive() ? sento.filter(function (x) { return fmatch(x); }).length + "軒を出しています" : "すべての銭湯を出しています"));
+        return;
+      }
       if (b && b.hasAttribute("data-open")) {
         if (F.open) delete F.open; else F.open = true;
         fupdate();
@@ -677,7 +691,7 @@
         toast(F.open ? "いま営業中の銭湯は" + n + "軒です" : (factive() ? n + "軒を出しています" : "すべての銭湯を出しています"));
         return;
       }
-      if (b) go(b.dataset.type === filter ? "" : "t=" + b.dataset.type);
+      if (b && b.dataset.type) go(b.dataset.type === filter ? "" : "t=" + b.dataset.type);
     });
 
     // 文字を打つたびにさがす。検索の途中は戻るの履歴を増やさない
@@ -720,6 +734,15 @@
     });
 
     setInterval(function () { if (F.open) restyle(); }, 60000);
+    var lg = $("legend");
+    lg.innerHTML = '<div class="lg-head"><strong>地図の見方</strong><button class="icon-btn" type="button" data-lgclose aria-label="地図の見方を閉じる">' + icon("x") + '</button></div><ul>' +
+      '<li><i class="k-dot"></i>都内の銭湯</li><li><i class="k-dot osm"></i>都の外の銭湯</li><li><i class="k-dot paused"></i>休業中の銭湯</li>' +
+      '<li><i class="k-dot big"></i>タイプがわかっている銭湯</li><li><i class="k-dot dim"></i>絞りこみの条件に合わない銭湯</li>' +
+      '<li><i class="k-in"></i>10分圏内。銭湯が多いほど濃い</li><li><i class="k-out"></i>10分圏の外。人が多いほど濃い</li></ul>';
+    function setLegend(open) { lg.hidden = !open; $("lgbtn").setAttribute("aria-pressed", open ? "true" : "false"); }
+    setLegend(wide.matches);
+    $("lgbtn").addEventListener("click", function () { setLegend(lg.hidden); });
+    lg.addEventListener("click", function (ev) { if (ev.target.closest("[data-lgclose]")) setLegend(false); });
     draw();
     placeCtrls();
     var h0 = hidden();

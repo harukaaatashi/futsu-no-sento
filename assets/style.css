@@ -304,22 +304,8 @@ body.mapapp { overflow: hidden; height: 100dvh; font-size: var(--t-s); line-heig
 .split { display: flex; height: var(--s4); margin-top: var(--s4); border: 2px solid var(--ink); }
 .split i { background: var(--blue); }
 .split em { flex: 1; background: var(--oke); }
-.map-key { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin-top: var(--s3); font-size: var(--t-xs); color: var(--sub); }
-.map-key li { display: flex; align-items: center; gap: var(--s2); }
-.map-key i { width: var(--s3); height: var(--s3); border: 1px solid var(--sub); }
-.map-key .k-in { background: linear-gradient(90deg, rgba(var(--cover-in), 0.08), rgba(var(--cover-in), 0.42)); width: var(--s8); }
-.map-key .k-out { background: linear-gradient(90deg, rgba(var(--cover-out), 0.25), rgba(var(--cover-out), 0.7)); width: var(--s8); }
-.map-key .k-dot { border-radius: 50%; background: var(--noren); border-color: var(--noren); }
-.map-key .k-dot.paused { background: var(--paper); border-color: var(--sub); }
 .paused-note { margin-top: var(--s2); padding: var(--s2) var(--s3); background: var(--grout); border-radius: var(--s1); font-size: var(--t-xs); }
 
-.types { margin-top: var(--s3); display: grid; gap: var(--s2); }
-.type { appearance: none; width: 100%; display: grid; grid-template-columns: var(--s6) 1fr auto; gap: var(--s3); align-items: start; padding: var(--s3); border: 1px solid var(--grout); border-radius: var(--s2); background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
-.type:hover { border-color: var(--noren); }
-.type svg { width: var(--s6); height: var(--s6); color: var(--noren); }
-.type strong { display: block; font-family: var(--maru); }
-.type small { display: block; font-size: var(--t-xs); color: var(--sub); line-height: 1.6; }
-.type b { font-variant-numeric: tabular-nums; }
 
 .list, .hits { margin-top: var(--s2); }
 .list li, .hits li { border-bottom: 1px solid var(--grout); }
@@ -335,8 +321,6 @@ body.mapapp { overflow: hidden; height: 100dvh; font-size: var(--t-s); line-heig
 .row-n b { font-family: var(--maru); font-size: var(--t-m); }
 .bar { display: flex; height: var(--s2); background: var(--oke); }
 .bar i { background: var(--blue); }
-.bar.thin { height: var(--s1); margin-top: var(--s1); background: var(--grout); }
-.bar.thin i { background: var(--noren); }
 .count { margin-top: var(--s4); font-size: var(--t-xs); color: var(--sub); }
 
 .towns { margin-top: var(--s3); }
@@ -430,11 +414,6 @@ details.hours summary::marker { color: var(--sub); }
 .nophoto:hover { background: var(--water); }
 @media (min-width: 760px) { .photos-s { margin: 0 calc(var(--s6) * -1) var(--s2); padding: 0 var(--s6); scroll-padding-inline: var(--s6); } }
 
-/* この銭湯の歩み */
-.hist { display: grid; gap: var(--s1); }
-.hist div { display: grid; grid-template-columns: 5em 1fr; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--grout); }
-.hist dt { color: var(--sub); font-size: var(--t-xs); padding-top: 2px; }
-.hist dd { margin: 0; font-variant-numeric: tabular-nums; }
 .row-n2 { display: block; font-size: var(--t-xs); color: var(--sub); white-space: nowrap; }
 
 /* 絞りこみ */
@@ -460,3 +439,38 @@ details.hours summary::marker { color: var(--sub); }
 .fnow span { flex: 1; }
 .fnow svg { width: 18px; height: 18px; flex: none; }
 @media (min-width: 760px) { .fbar { margin: var(--s6) calc(var(--s6) * -1) 0; padding: var(--s3) var(--s6); bottom: calc(var(--s12) * -1); } }
+
+/* 画面の整理（DESIGN.md）: 一覧の形、すべて見る、この銭湯について、地図の見方 */
+.split-key { display: flex; justify-content: space-between; gap: var(--s4); margin-top: var(--s2); font-size: var(--t-xs); color: var(--sub); font-variant-numeric: tabular-nums; }
+.row-main strong .ti { display: inline-flex; margin-left: var(--s1); color: var(--noren); vertical-align: -2px; }
+.row-n { width: auto; min-width: 5em; white-space: nowrap; }
+.seeall { appearance: none; width: 100%; display: flex; align-items: center; gap: var(--s2); margin-top: var(--s1); padding: var(--s3) 0; border: 0; border-bottom: 1px solid var(--grout); background: none; color: var(--blue); font: inherit; font-weight: 700; font-size: var(--t-s); cursor: pointer; text-align: left; }
+.seeall span { flex: 1; font-weight: 400; font-size: var(--t-xs); color: var(--sub); }
+.seeall svg { width: 18px; height: 18px; }
+.btn.wide { width: 100%; justify-content: center; margin: var(--s3) 0; }
+.btn.wide svg { width: 18px; height: 18px; }
+.facts4 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.facts4 div { padding: var(--s3); background: var(--water); border-radius: var(--s2); }
+.facts4 dt { font-size: var(--t-xs); color: var(--sub); line-height: 1.5; }
+.facts4 dd { margin: var(--s1) 0 0; font-variant-numeric: tabular-nums; line-height: 1.4; }
+.facts4 b { font-family: var(--maru); font-size: var(--t-l); }
+.facts4 small { display: block; font-size: var(--t-xs); color: var(--sub); }
+.facts4 .unk { font-size: var(--t-xs); color: var(--sub); }
+.fdesc { margin: 0 0 var(--s2); font-size: var(--t-xs); color: var(--sub); }
+.fopt.zero span { color: var(--sub); border-style: dashed; }
+.legend-card { position: fixed; z-index: 950; right: 64px; bottom: 140px; width: 288px; max-width: calc(100vw - 80px); padding: var(--s2) var(--s3) var(--s3); background: var(--paper); border-radius: var(--s2); box-shadow: var(--shadow-2); font-size: var(--t-xs); }
+.legend-card .lg-head { display: flex; align-items: center; justify-content: space-between; }
+.legend-card .icon-btn { width: var(--s8); height: var(--s8); }
+.legend-card ul { display: grid; gap: var(--s1); margin-top: var(--s1); }
+.legend-card li { display: flex; align-items: center; gap: var(--s2); line-height: 1.5; }
+.legend-card i { flex: none; width: var(--s3); height: var(--s3); }
+.k-dot { border-radius: 50%; background: var(--noren); }
+.k-dot.osm { background: var(--sub); }
+.k-dot.paused { background: var(--paper); border: 1.5px solid var(--sub); }
+.k-dot.big { width: var(--s4) !important; height: var(--s4) !important; border: 2px solid var(--paper); outline: 1px solid var(--noren); }
+.k-dot.dim { opacity: 0.25; }
+.legend-card .k-in, .legend-card .k-out { width: var(--s8); height: var(--s3); border-radius: 2px; }
+.k-in { background: linear-gradient(90deg, rgba(var(--cover-in), 0.08), rgba(var(--cover-in), 0.42)); }
+.k-out { background: linear-gradient(90deg, rgba(var(--cover-out), 0.25), rgba(var(--cover-out), 0.7)); }
+@media (min-width: 760px) { .legend-card { right: 64px; bottom: var(--s8); } }
+@media (max-width: 420px) { .chip:not(.filter-chip) svg { display: none; } .chip { padding: 0 var(--s3); } }

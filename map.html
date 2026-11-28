@@ -30,8 +30,10 @@
 <div class="ctrls" id="ctrls">
   <button class="ctrl" type="button" id="locate" aria-label="いまいる場所を見る"><i data-lucide="locate-fixed"></i></button>
   <button class="ctrl" type="button" id="layer" aria-pressed="true" aria-label="10分圏の塗り分けを出す"><i data-lucide="layers"></i></button>
+  <button class="ctrl" type="button" id="lgbtn" aria-pressed="false" aria-label="地図の見方"><i data-lucide="info"></i></button>
   <div class="zoom"><button class="ctrl" type="button" id="zin" aria-label="地図を大きくする"><i data-lucide="plus"></i></button><button class="ctrl" type="button" id="zout" aria-label="地図を小さくする"><i data-lucide="minus"></i></button></div>
 </div>
+<div class="legend-card" id="legend" hidden></div>
 <p class="toast" id="toast" role="status" hidden></p>
 <p class="sr" id="live" aria-live="polite"></p>
 <noscript><p class="noscript">この地図は JavaScript を使います。ブラウザの設定で JavaScript を使えるようにしてください。</p></noscript>
