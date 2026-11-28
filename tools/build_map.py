@@ -11,6 +11,7 @@
   tblT001142Q5338.txt      同じく 5338
   13.csv                   市区町村別メッシュ・コード一覧の東京都（総務省統計局）
 
+銭湯のタイプ（data/map/types.json）は、tools/build.py が結びつける。
 出力: data/map/cells.json, data/map/sento.json, data/map/summary.json
 """
 import csv
@@ -84,10 +85,25 @@ def town_of(towns, la, lo):
     return None
 
 
+Z2H = str.maketrans('０１２３４５６７８９：－−〜～', '0123456789:--~~')
+
+
 def load_sento(towns):
-    """都内は浴場組合の一覧、都の外は OpenStreetMap。[緯度, 経度, 名前, 出どころ] で返す。"""
-    out = [(s['lat'], s['lon'], s['name'], 0) for s in json.load(open(RAW / 'tokyo_sento.json'))
-           if 35.4 < s['lat'] < 36.0 and 138.9 < s['lon'] < 140.0]
+    """都内は浴場組合の一覧、都の外は OpenStreetMap。1 軒を 1 つの辞書で返す。"""
+    out = []
+    for s in json.load(open(RAW / 'tokyo_sento.json')):
+        if not (35.4 < s['lat'] < 36.0 and 138.9 < s['lon'] < 140.0):
+            continue
+        paused = '休業中' in s['name']          # 組合の一覧で名前に「（休業中）」とある銭湯
+        out.append({
+            'id': s['url'].rstrip('/').rsplit('/', 1)[1], 'name': re.sub(r'\s*（休業中）\s*', '', s['name']), 'kana': s.get('kana', ''),
+            'paused': paused,
+            'area': s['area'], 'la': round(s['lat'], 5), 'lo': round(s['lon'], 5), 'src': 'tokyo',
+            'address': s.get('address', '').translate(Z2H), 'tel': s.get('tel', ''), 'access': s.get('access', '').translate(Z2H),
+            'closed': s.get('closed', '').translate(Z2H), 'hours': s.get('hours', '').translate(Z2H),
+            'links': s.get('links', []), 'services': s.get('services', []), 'features': s.get('features', []),
+            'url': s['url'],
+        })
     for e in json.load(open(RAW / 'osm_bath.json'))['elements']:
         t = e.get('tags', {})
         lat = e.get('lat') or e.get('center', {}).get('lat')
@@ -102,7 +118,8 @@ def load_sento(towns):
             continue
         if town_of(towns, lat, lon):
             continue
-        out.append((lat, lon, name.split(';')[0], 1))
+        out.append({'id': f'osm-{e["type"][0]}{e["id"]}', 'name': name.split(';')[0], 'la': round(lat, 5), 'lo': round(lon, 5),
+                    'src': 'osm', 'url': f'https://www.openstreetmap.org/{e["type"]}/{e["id"]}'})
     return out
 
 
@@ -114,28 +131,35 @@ def main():
             near.add(mesh)
 
     sento = load_sento(towns)
-    grid = defaultdict(list)          # 粗いマス目に銭湯を入れて、近いものだけを比べる
+    grid = defaultdict(list)          # 粗いマス目に銭湯を入れて、近いものだけを比べる。休業中の銭湯は数えない
     for i, s in enumerate(sento):
-        grid[(int(s[0] * 20), int(s[1] * 20))].append(i)
+        if not s.get('paused'):
+            grid[(int(s['la'] * 20), int(s['lo'] * 20))].append(i)
 
-    def nearest(la, lo):
-        best, bi = 1e9, -1
-        ky = 111320.0
-        kx = 111320.0 * math.cos(math.radians(la))
+    def dist(i, la, lo):
+        return math.hypot((sento[i]['la'] - la) * 111320.0, (sento[i]['lo'] - lo) * 111320.0 * math.cos(math.radians(la)))
+
+    def around(la, lo, span):
         gy, gx = int(la * 20), int(lo * 20)
+        for y in range(gy - span, gy + span + 1):
+            for x in range(gx - span, gx + span + 1):
+                yield from grid.get((y, x), ())
+
+    def nearest(la, lo, skip=-1):
+        best, bi = 1e9, -1
         for span in (1, 3, 8):
-            for y in range(gy - span, gy + span + 1):
-                for x in range(gx - span, gx + span + 1):
-                    for i in grid.get((y, x), ()):
-                        d = math.hypot((sento[i][0] - la) * ky, (sento[i][1] - lo) * kx)
-                        if d < best:
-                            best, bi = d, i
+            for i in around(la, lo, span):
+                d = dist(i, la, lo)
+                if i != skip and d < best:
+                    best, bi = d, i
             if best < span * 4000:
                 break
         return best, bi
 
     cells = []
     by_town = defaultdict(lambda: [0, 0, 0.0, 0.0])    # [人口, 圏内の人口, 緯度×人口, 経度×人口]
+    reach = defaultdict(int)          # 銭湯ごとの、10 分圏に住む人
+    only = defaultdict(int)           # そのうち、10 分圏にほかの銭湯がない人
     for name in ('tblT001142Q5339.txt', 'tblT001142Q5338.txt'):
         with open(RAW / name, encoding='cp932') as f:
             rows = list(csv.reader(f))[2:]
@@ -152,15 +176,25 @@ def main():
                 continue
             d, si = nearest(la, lo)
             d = int(round(d))
-            cells.append([row, col, pop, d, si])
+            hits = [i for i in around(la, lo, 1) if dist(i, la, lo) <= RADIUS] if d <= RADIUS else []
+            cells.append([row, col, pop, d, si, len(hits)])   # 最後は、10 分で行ける銭湯の数
             t = by_town[tn]
             t[0] += pop
             t[2] += la * pop
             t[3] += lo * pop
             if d <= RADIUS:
                 t[1] += pop
+                for i in hits:
+                    reach[i] += pop
+                if len(hits) == 1:
+                    only[hits[0]] += pop
 
-    sento_out = [[round(s[0], 5), round(s[1], 5), s[2], s[3]] for s in sento]
+    for i, s in enumerate(sento):
+        s['reach'] = reach[i]
+        s['only'] = only[i]
+        d, j = nearest(s['la'], s['lo'], skip=i)
+        s['next'] = [j, int(round(d))]
+
     total = sum(c[2] for c in cells)
     inside = sum(c[2] for c in cells if c[3] <= RADIUS)
     town_out = [{'name': k, 'pop': v[0], 'in': v[1], 'lat': round(v[2] / v[0], 4), 'lon': round(v[3] / v[0], 4)}
@@ -168,18 +202,19 @@ def main():
     town_out.sort(key=lambda t: t['in'] - t['pop'])
     summary = {
         'radius': RADIUS, 'pop': total, 'in': inside, 'out': total - inside,
-        'cells': len(cells), 'sento_tokyo': sum(1 for s in sento if s[3] == 0),
-        'sento_around': sum(1 for s in sento if s[3] == 1), 'towns': town_out,
+        'cells': len(cells), 'sento_tokyo': sum(1 for s in sento if s['src'] == 'tokyo'),
+        'sento_paused': sum(1 for s in sento if s.get('paused')),
+        'sento_around': sum(1 for s in sento if s['src'] == 'osm'), 'towns': town_out,
     }
 
     json.dump({'lat0': LAT0, 'lon0': LON0, 'dlat': DLAT, 'dlon': DLON, 'cells': cells},
               open(OUT / 'cells.json', 'w'), separators=(',', ':'))
-    json.dump(sento_out, open(OUT / 'sento.json', 'w'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(sento, open(OUT / 'sento.json', 'w'), ensure_ascii=False, separators=(',', ':'))
     json.dump(summary, open(OUT / 'summary.json', 'w'), ensure_ascii=False, indent=1)
     print(f'人口 {total:,} / 圏内 {inside:,} ({inside / total:.1%}) / 圏外 {total - inside:,}')
     print(f'メッシュ {len(cells):,} / 都内の銭湯 {summary["sento_tokyo"]} / まわり {summary["sento_around"]}')
-    for t in town_out[:12]:
-        print(t['name'], f"{t['pop']:,}", f"{t['in'] / t['pop']:.0%}", f"圏外 {t['pop'] - t['in']:,}")
+    for s in sorted(sento, key=lambda s: -s['only'])[:8]:
+        print(s['name'], s.get('area', ''), f"10分圏 {s['reach']:,}", f"ここだけ {s['only']:,}")
 
 
 if __name__ == '__main__':

@@ -428,67 +428,72 @@ for n, i in enumerate(ideas):
     (ROOT / f'idea-{i["id"]}.html').write_text(page, encoding='utf-8')
 
 # ---------- 空白地帯マップ ----------
-mp = ROOT / 'data/map/summary.json'
-if mp.exists():
-    S = json.loads(mp.read_text(encoding='utf-8'))
-    pct = S['in'] / S['pop'] * 100
+# data/map/types.json に人が書いた銭湯のタイプを、名前と区市で一覧の銭湯に結びつける。
+# 元データがなくても、タイプだけ書き足して作り直せるように、ここで行う
+if (ROOT / 'data/map/sento.json').exists():
+    sento = json.loads((ROOT / 'data/map/sento.json').read_text(encoding='utf-8'))
+    tdata = json.loads((ROOT / 'data/map/types.json').read_text(encoding='utf-8'))
+    tids = {t['id'] for t in tdata['types']}
+    for x in sento:
+        x.pop('types', None)
+        x.pop('notes', None)
+    for m in tdata['sento']:
+        hit = [x for x in sento if x['src'] == 'tokyo' and x['area'] == m['area'] and m['name'] in x['name']]
+        if len(hit) != 1:
+            raise SystemExit(f'types.json の「{m["name"]}、{m["area"]}」が、一覧の銭湯 1 軒に決まりません: {[h["name"] for h in hit]}')
+        if set(m['types']) - tids:
+            raise SystemExit(f'types.json の「{m["name"]}」に、ないタイプがあります: {set(m["types"]) - tids}')
+        x = hit[0]
+        x['types'] = x.get('types', []) + [t for t in m['types'] if t not in x.get('types', [])]
+        x.setdefault('notes', []).append({k: m.get(k, '') for k in ('types', 'what', 'src', 'srcName', 'date')})
+    (ROOT / 'data/map/sento.json').write_text(json.dumps(sento, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    sm = json.loads((ROOT / 'data/map/summary.json').read_text(encoding='utf-8'))
+    sm['types'] = [dict(t, count=sum(1 for x in sento if t['id'] in x.get('types', []))) for t in tdata['types']]
+    (ROOT / 'data/map/summary.json').write_text(json.dumps(sm, ensure_ascii=False, indent=1), encoding='utf-8')
 
-    def man(n):
-        return f'{round(n / 10000):,}万'
-
-    def town_row(t):
-        share = t['in'] / t['pop'] * 100
-        return (f'<li><button type="button" data-fly="{t["lat"]},{t["lon"]}"><strong>{e(t["name"])}</strong>'
-                f'<span class="bar" role="img" aria-label="10分圏内に住む人は{share:.0f}%"><i style="width:{share:.1f}%"></i></span>'
-                f'<span class="out">圏外に<b>{t["pop"] - t["in"]:,}</b>人、圏内は{share:.0f}%</span></button></li>')
-
-    top = ''.join(town_row(t) for t in S['towns'][:10])
-    rest = ''.join(town_row(t) for t in S['towns'][10:])
-    page = head('空白地帯マップ｜普通の銭湯研究所', f'東京で、自転車10分以内に銭湯がある人は{pct:.0f}%。圏外に人が多い場所を地図にしました。').replace(
-        '<link rel="stylesheet" href="assets/style.css">',
-        '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">\n<link rel="stylesheet" href="assets/style.css">') + f'''
-  <a class="brand" href="index.html">普通の銭湯研究所</a>
-  <nav class="crumb" aria-label="いまいる場所"><a href="index.html">全体</a>{ARROW}<a href="idea-04.html">空白地帯マップ</a>{ARROW}<span>東京</span></nav>
-  <div class="idea-head">
-    <h1><span>東京で、</span><span>自転車10分以内に</span><span>銭湯がある人は</span></h1>
-    <p class="big"><b>{pct:.0f}<small>%</small></b><span>残りの{man(S["out"])}人は、<br>10分では着きません。</span></p>
-    <div class="split" role="img" aria-label="圏内が{pct:.0f}%、圏外が{100 - pct:.0f}%"><i style="width:{pct:.1f}%"></i><em></em></div>
-    <p class="split-key"><span><b>圏内</b> {man(S["in"])}人</span><span><b>圏外</b> {man(S["out"])}人</span></p>
-  </div>
-
-  <section class="sec">
-    <h2>どこが空いているか</h2>
-    <p>黄色いところが、銭湯まで10分では着かない人が住んでいる場所です。色が濃いほど、人が多く住んでいます。地図を押すと、その場所の人数と、いちばん近い銭湯がわかります。</p>
-    <div id="gapmap" role="application" aria-label="東京の銭湯と、10分圏の内と外に住む人の地図"></div>
-    <ul class="map-key" aria-label="地図の見方">
-      <li><i class="k-dot"></i>銭湯</li>
-      <li><i class="k-in"></i>10分圏内に人が住んでいる</li>
-      <li><i class="k-out"></i>10分圏の外に人が住んでいる。濃いほど多い</li>
-    </ul>
-  </section>
-
-  <section class="sec">
-    <h2>圏外の人が多い区と市</h2>
-    <p>圏外に住む人が多い順に並べました。青が圏内、黄色が圏外です。押すと、地図がその場所に動きます。</p>
-    <ol class="towns">{top}</ol>
-    <details class="more"><summary>残りの{len(S["towns"]) - 10}の区市町村も見る</summary><ol class="towns">{rest}</ol></details>
-  </section>
-
-  <section class="sec">
-    <h2>数え方と、まだ粗いところ</h2>
-    <ul class="caveats">
-      <li>自転車で10分を、直線で1.5kmと置きました。時速12kmで走ると道のりは2kmで、道は直線より3割ほど遠回りになる、という仮の計算です。坂や川、線路は見ていません。</li>
-      <li>人口は、2020年の国勢調査を250m四方に区切ったものです。島は入れていません。</li>
-      <li>都内の銭湯は、東京都浴場組合の東京銭湯マップに載っている{S["sento_tokyo"]}軒です。組合に入っていない銭湯は入っていません。2026年11月28日に読みました。</li>
-      <li>都の外の銭湯は、OpenStreetMapにある{S["sento_around"]}軒を使いました。都内の一覧より抜けが多く、県境の近くでは圏外が多めに出ているはずです。</li>
-      <li>いい銭湯かどうか、これからも続きそうかどうかは、まだ見ていません。ここにあるのは距離だけです。</li>
-    </ul>
-    <p class="note">出どころは、<a href="https://www.e-stat.go.jp/gis">e-Statの地図で見る統計</a>、<a href="https://www.1010.or.jp/map/">東京銭湯マップ</a>、<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>、<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>です。</p>
-  </section>
-
-  <footer><a href="index.html">全体のページに戻る</a></footer>
-</main>
+# 中身は assets/map.js が data/map の JSON から描く。ここでは枠だけを作る
+if (ROOT / 'data/map/summary.json').exists():
+    page = '''<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>空白地帯マップ｜普通の銭湯研究所</title>
+<meta name="description" content="東京で、自転車10分以内に銭湯がある人の割合と、銭湯ごとのくわしい中身を地図で見られます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="mapapp">
+<div id="gapmap" role="application" aria-label="東京の銭湯と、10分圏の内と外に住む人の地図"></div>
+<form class="searchbar" id="search" role="search">
+  <a class="icon-btn" href="index.html" aria-label="全体のページに戻る"><i data-lucide="house"></i></a>
+  <label class="sr" for="q">銭湯をさがす</label>
+  <input id="q" type="search" placeholder="銭湯、駅、区や市でさがす" autocomplete="off" enterkeyhint="search">
+  <button class="icon-btn" type="button" id="clear" aria-label="入力を消す" hidden><i data-lucide="x"></i></button>
+  <button class="icon-btn" type="submit" aria-label="さがす"><i data-lucide="search"></i></button>
+</form>
+<div class="chips" id="chips" role="group" aria-label="タイプで絞りこむ"></div>
+<aside class="sheet" id="sheet" data-state="half" aria-label="銭湯のくわしい中身">
+  <div class="grab" id="grab"><span class="handle"></span><span class="sr">上下に動かすと、欄の高さが変わります</span></div>
+  <div class="sheet-body" id="body" tabindex="-1"><p class="loading">地図のデータを読みこんでいます。</p></div>
+  <button class="collapse" id="collapse" type="button" aria-label="左の欄をしまう" aria-expanded="true"><i data-lucide="chevron-left"></i></button>
+</aside>
+<div class="ctrls" id="ctrls">
+  <button class="ctrl" type="button" id="locate" aria-label="いまいる場所を見る"><i data-lucide="locate-fixed"></i></button>
+  <button class="ctrl" type="button" id="layer" aria-pressed="true" aria-label="10分圏の塗り分けを出す"><i data-lucide="layers"></i></button>
+  <div class="zoom"><button class="ctrl" type="button" id="zin" aria-label="地図を大きくする"><i data-lucide="plus"></i></button><button class="ctrl" type="button" id="zout" aria-label="地図を小さくする"><i data-lucide="minus"></i></button></div>
+</div>
+<p class="toast" id="toast" role="status" hidden></p>
+<p class="sr" id="live" aria-live="polite"></p>
+<noscript><p class="noscript">この地図は JavaScript を使います。ブラウザの設定で JavaScript を使えるようにしてください。</p></noscript>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script src="assets/map.js"></script>
 </body>
 </html>
