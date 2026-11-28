@@ -16,6 +16,8 @@
   // ---------- 小さな道具 ----------
   // 銭湯の名前などは外から取ったデータなので、HTMLとして働かないようにしてから出す
   function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  // 外から取ったリンクは、http と https だけを通す。ほかは空にする
+  function url(u) { return /^https?:\/\//i.test(String(u || "")) ? esc(u) : ""; }
   function num(n) { return Number(n).toLocaleString("ja-JP"); }
   function km(m) { return m < 1000 ? m + "m" : (m / 1000).toFixed(1) + "km"; }
   function man(n) { return Math.round(n / 10000).toLocaleString("ja-JP") + "万"; }
@@ -405,8 +407,9 @@
       var gq = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(s.name + " " + (s.address || s.area || ""));
       if (!ps.length) return '<a class="nophoto" href="' + esc(gq) + '" target="_blank" rel="noopener">' + icon("images") + '<span>写真はまだありません。Googleマップで写真を見る</span></a>';
       return '<ul class="photos-s">' + ps.map(function (p) {
-        return '<li><a href="' + esc(p.page) + '" target="_blank" rel="noopener"><img src="' + esc(p.thumb) + '" alt="' + esc(s.name) + 'の写真" loading="lazy" referrerpolicy="no-referrer"></a>' +
-          '<span class="credit">' + (p.date ? esc(p.date.replace(/^(\d{4})-0?(\d{1,2}).*$/, "$1年$2月")) + "に撮影。" : "") + '写真は' + esc(p.artist || "撮った人の名前なし") + '、' + (p.licenseUrl ? '<a href="' + esc(p.licenseUrl) + '" target="_blank" rel="noopener">' + esc(p.license) + "</a>" : esc(p.license)) + "</span></li>";
+        if (!url(p.thumb)) return "";
+        return '<li><a href="' + url(p.page) + '" target="_blank" rel="noopener"><img src="' + url(p.thumb) + '" alt="' + esc(s.name) + 'の写真" loading="lazy" referrerpolicy="no-referrer"></a>' +
+          '<span class="credit">' + (p.date ? esc(p.date.replace(/^(\d{4})-0?(\d{1,2}).*$/, "$1年$2月")) + "に撮影。" : "") + '写真は' + esc(p.artist || "撮った人の名前なし") + '、' + (url(p.licenseUrl) ? '<a href="' + url(p.licenseUrl) + '" target="_blank" rel="noopener">' + esc(p.license) + "</a>" : esc(p.license)) + "</span></li>";
       }).join("") + '</ul>' + '<a class="morephoto" href="' + esc(gq) + '" target="_blank" rel="noopener">Googleマップでほかの写真を見る</a>';
     }
 
@@ -424,8 +427,8 @@
         '<div class="acts">' +
         '<a class="act primary" href="' + gmap + '" target="_blank" rel="noopener"><span class="act-i">' + icon("navigation") + '</span>経路を見る</a>' +
         (s.src === "tokyo"
-          ? '<a class="act" href="' + esc(s.url) + '" target="_blank" rel="noopener"><span class="act-i">' + icon("external-link") + '</span>組合のページ</a>'
-          : '<a class="act" href="' + esc(s.url) + '" target="_blank" rel="noopener"><span class="act-i">' + icon("external-link") + '</span>地図の元</a>') +
+          ? '<a class="act" href="' + url(s.url) + '" target="_blank" rel="noopener"><span class="act-i">' + icon("external-link") + '</span>組合のページ</a>'
+          : '<a class="act" href="' + url(s.url) + '" target="_blank" rel="noopener"><span class="act-i">' + icon("external-link") + '</span>地図の元</a>') +
         '<button class="act" type="button" data-share><span class="act-i">' + icon("share-2") + '</span>リンクを送る</button></div>';
 
       if (s.src === "tokyo") {
@@ -437,7 +440,7 @@
           ["calendar-x", "休み", s.sched ? "" : esc(s.closed)],
           ["train-front", "行き方", esc(s.access)],
           ["phone", "電話", s.tel ? '<a href="tel:' + esc(s.tel.replace(/[^\d+]/g, "")) + '">' + esc(s.tel) + "</a>" : ""],
-          ["globe", "公式ページ", (s.links || []).map(function (l) { return /^https?:\/\//.test(l[1]) ? '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + "</a>" : ""; }).join("、")]
+          ["globe", "公式ページ", (s.links || []).map(function (l) { return url(l[1]) ? '<a href="' + url(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + "</a>" : ""; }).join("、")]
         ].filter(function (r) { return r[2]; });
         html += '<ul class="info">' + info.map(function (r) { return '<li>' + icon(r[0]) + '<div><span class="sr">' + r[1] + '</span>' + r[2] + '</div></li>'; }).join("") + '</ul>';
       } else {
@@ -456,7 +459,7 @@
       html += '<section class="blk"><h3>いい普通の銭湯のタイプ</h3>';
       if ((s.notes || []).length) {
         html += s.notes.map(function (n) {
-          return '<div class="tnote"><p>' + esc(n.what) + '</p><p class="note"><a href="' + esc(n.src) + '" target="_blank" rel="noopener">' + esc(n.srcName) + '</a>' + (n.date ? '、<span class="nw">' + esc(n.date.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, "$1年$2月$3日")) + "の資料</span>" : "") + '</p></div>';
+          return '<div class="tnote"><p>' + esc(n.what) + '</p><p class="note">' + (url(n.src) ? '<a href="' + url(n.src) + '" target="_blank" rel="noopener">' + esc(n.srcName) + '</a>' : esc(n.srcName)) + '' + (n.date ? '、<span class="nw">' + esc(n.date.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, "$1年$2月$3日")) + "の資料</span>" : "") + '</p></div>';
         }).join("");
       } else {
         html += '<p class="empty-s">まだわかりません。行って確かめたら書き足します。</p>';

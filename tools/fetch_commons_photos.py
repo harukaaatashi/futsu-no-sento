@@ -194,9 +194,13 @@ def main():
             text = title + ' ' + desc
             if s['area'] not in text and not (roma and roma in flat(text)):
                 continue
+        def web(u):                 # http と https のリンクだけを残す
+            return u if re.match(r'^https?://', u or '', re.I) else ''
+        if not web(ii['thumburl']):
+            continue
         photos.setdefault(s['id'], []).append({
-            'thumb': ii['thumburl'], 'page': ii.get('descriptionshorturl') or ii.get('descriptionurl'),
-            'license': lic, 'licenseUrl': meta.get('LicenseUrl', {}).get('value', ''),
+            'thumb': ii['thumburl'], 'page': web(ii.get('descriptionshorturl') or ii.get('descriptionurl')),
+            'license': lic, 'licenseUrl': web(meta.get('LicenseUrl', {}).get('value', '')),
             'artist': re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', html.unescape(meta.get('Artist', {}).get('value', '')))).strip()[:80],
             'date': re.sub(r'<[^>]+>', '', meta.get('DateTimeOriginal', {}).get('value', ''))[:10],
             'file': title, 'located': bool(co),
