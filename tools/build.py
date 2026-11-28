@@ -2,9 +2,13 @@
 
 読むもの: actions.md、data/ideas.json、data/cases.json
 作るもの: index.html、idea-01.html から idea-10.html、map.html、players.md
+空白地帯マップの data/map/sento.json に、タイプ（types.json）、写真（photos.json）、営業時間の決まり（tools/hours.py）を入れる
 """
-import html, json, re
+import html, json, re, sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hours import schedule  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 e = html.escape
@@ -434,9 +438,19 @@ if (ROOT / 'data/map/sento.json').exists():
     sento = json.loads((ROOT / 'data/map/sento.json').read_text(encoding='utf-8'))
     tdata = json.loads((ROOT / 'data/map/types.json').read_text(encoding='utf-8'))
     tids = {t['id'] for t in tdata['types']}
+    photos_path = ROOT / 'data/map/photos.json'
+    photos = json.loads(photos_path.read_text(encoding='utf-8')) if photos_path.exists() else {}
     for x in sento:
         x.pop('types', None)
         x.pop('notes', None)
+        x.pop('photos', None)
+        x.pop('sched', None)
+        if x['src'] == 'tokyo':
+            sc = schedule(x.get('hours', ''), x.get('closed', ''))
+            if sc:
+                x['sched'] = sc                        # 曜日ごとの営業時間と休みの決まり。読めない銭湯は持たない
+        if photos.get(x['id']):
+            x['photos'] = photos[x['id']][:3]
     for m in tdata['sento']:
         hit = [x for x in sento if x['src'] == 'tokyo' and x['area'] == m['area'] and m['name'] in x['name']]
         if len(hit) != 1:

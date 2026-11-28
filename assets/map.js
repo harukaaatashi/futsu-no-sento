@@ -153,7 +153,7 @@
     g.cells.forEach(function (c) { look.set(c[0] * W + c[1], c); });
     sento.forEach(function (s, i) { s.i = i; s.key = norm([s.name, s.kana, s.area, s.address, s.access].join(" ")); byId[s.id] = s; });
     types.forEach(function (t) { typeById[t.id] = t; });
-    var filter = null, current = null, navs = 0;
+    var filter = null, current = null, navs = 0, openOnly = false;
 
     // 250m 四方ごとに、圏内は薄い青、圏外は黄色（人が多いほど濃く）で塗る
     var Grid = L.GridLayer.extend({
@@ -191,7 +191,8 @@
     // 銭湯の点。タイプがわかっている銭湯は大きく描く
     var dots = L.canvas({ padding: 0.3 });
     function look1(s) {
-      var on = !filter || (s.types || []).indexOf(filter) >= 0, typed = s.types && s.types.length;
+      var st = openOnly ? status(s) : null;
+      var on = (!filter || (s.types || []).indexOf(filter) >= 0) && (!openOnly || (st && st.open)), typed = s.types && s.types.length;
       return { renderer: dots, radius: typed ? 8 : 5, weight: typed ? 3 : 1.5,
         fillColor: s.paused ? C.paper : s.src === "osm" ? C.sub : C.noren, color: s.paused ? C.sub : C.paper,
         fillOpacity: on ? 1 : 0.2, opacity: on ? 1 : 0.3 };
@@ -238,26 +239,83 @@
     function typeIcons(s) {
       return (s.types || []).map(function (id) { var t = typeById[id]; return t ? '<span class="ti" title="' + esc(t.name) + '">' + icon(t.icon) + '</span>' : ""; }).join("");
     }
+    function rowStatus(s) {
+      var st = status(s);
+      return st ? '<span class="row-open ' + (st.open ? "on" : "shut") + '">' + st.text + "</span>" : "";
+    }
     function row(s, extra) {
       return '<li><button class="row" type="button" data-go="s=' + esc(s.id) + '"><span class="row-main"><strong>' + esc(s.name) + '</strong>' +
-        '<span class="row-sub">' + esc(s.area || "都の外") + (s.access ? "、" + esc(s.access) : "") + '</span></span>' +
+        '<span class="row-sub">' + esc(s.area || "都の外") + (s.access ? "、" + esc(s.access) : "") + '</span>' + rowStatus(s) + '</span>' +
         (extra || '<span class="row-icons">' + typeIcons(s) + '</span>') + '</button></li>';
     }
 
-    // 営業時間と休みが単純に書かれているときだけ、いま開いているかを出す
-    function openNow(s) {
-      if (s.paused) return "";
-      var h = (s.hours || "").replace(/（[^）]*）|\([^)]*\)/g, "").replace(/\s/g, "").match(/^(\d{1,2}):(\d{2})[-~](\d{1,2}):(\d{2})$/);
-      if (!h) return "";
-      var now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-      var day = "日月火水木金土".charAt(now.getDay()), closed = (s.closed || "").replace(/\s/g, "");
-      if (/^([日月火水木金土]曜(日)?、?)+$/.test(closed) && closed.indexOf(day + "曜") >= 0) return '<p class="open shut">きょうは休み</p>';
-      if (!/^([日月火水木金土]曜(日)?、?)*$|^なし$|^無休$/.test(closed)) return "";
-      var m = now.getHours() * 60 + now.getMinutes(), a = +h[1] * 60 + +h[2], b = +h[3] * 60 + +h[4];
-      if (b > 1440 && m < b - 1440) m += 1440;   // 25:00のように、夜中をまたいで開いている
-      if (m < a) return '<p class="open shut">' + h[1] + ":" + h[2] + "から営業</p>";
-      if (m < b) return '<p class="open on">営業中、' + h[3] + ":" + h[4] + "まで</p>";
-      return '<p class="open shut">きょうの営業は終わりました</p>';
+    // ---------- いま開いているか ----------
+    // 祝日。2026年と2027年の分だけ持つ。ほかの年は、祝日の扱いを「確かめて」と出す
+    var HOL = ("2026-01-01 2026-01-12 2026-02-11 2026-02-23 2026-03-20 2026-04-29 2026-05-03 2026-05-04 2026-05-05 2026-05-06 " +
+      "2026-07-20 2026-08-11 2026-09-21 2026-09-22 2026-09-23 2026-10-12 2026-11-03 2026-11-23 " +
+      "2027-01-01 2027-01-11 2027-02-11 2027-02-23 2027-03-21 2027-03-22 2027-04-29 2027-05-03 2027-05-04 2027-05-05 " +
+      "2027-07-19 2027-08-11 2027-09-20 2027-09-23 2027-10-11 2027-11-03 2027-11-23").split(" ");
+    var WDN = "日月火水木金土";
+    function jst() { return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })); }
+    function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function isHol(d) { return HOL.indexOf(ymd(d)) >= 0; }
+    function hm(m) { m = m % 1440; return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); }
+    // 決まりの上で休みの日か（祝日の扱いは入れない）
+    function ruleOff(o, d) {
+      var wd = d.getDay(), date = d.getDate(), month = d.getMonth() + 1;
+      var dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      return o.wd.indexOf(wd) >= 0 || o.dates.indexOf(date) >= 0 ||
+        ((!o.months.length || o.months.indexOf(month) >= 0) && o.nth.some(function (n) { return n[0] === Math.ceil(date / 7) && n[1] === wd; })) ||
+        (o.last.indexOf(wd) >= 0 && date + 7 > dim);
+    }
+    function isOff(sc, d) {
+      var r = ruleOff(sc.off, d);
+      if (isHol(d)) {
+        if (sc.hol === "off") return true;
+        if (r && (sc.hol === "open" || sc.hol === "next")) return false;
+      }
+      if (sc.hol === "next") {
+        var y = new Date(d); y.setDate(d.getDate() - 1);
+        if (isHol(y) && ruleOff(sc.off, y)) return true;
+      }
+      return r;
+    }
+    function rangesOn(sc, d) { var h = sc.hours; return (isHol(d) && h.h) || h[String(d.getDay())] || h.d || []; }
+    // { open: 開いているか, text: 出す言葉 }。読めない銭湯は null
+    function status(s) {
+      var sc = s.sched;
+      if (!sc || s.paused) return null;
+      var now = jst(), m = now.getHours() * 60 + now.getMinutes();
+      var y = new Date(now); y.setDate(now.getDate() - 1);
+      if (!isOff(sc, y)) {
+        var late = rangesOn(sc, y).filter(function (r) { return r[1] > 1440 && m < r[1] - 1440; })[0];
+        if (late) return { open: true, text: "営業中、" + hm(late[1]) + "まで" };
+      }
+      if (isOff(sc, now)) return { open: false, text: "きょうは休み" };
+      var rs = rangesOn(sc, now);
+      for (var i = 0; i < rs.length; i++) {
+        if (m >= rs[i][0] && m < rs[i][1]) return { open: true, text: "営業中、" + (rs[i][1] > 1440 ? "夜中の" : "") + hm(rs[i][1]) + "まで" };
+        if (m < rs[i][0]) return { open: false, text: hm(rs[i][0]) + "から営業" };
+      }
+      return { open: false, text: "きょうの営業は終わりました" };
+    }
+    function statusLine(s) {
+      var st = status(s);
+      if (!st) return s.paused ? "" : '<p class="now-st shut">いま開いているかは、組合のページで確かめてください</p>';
+      return '<p class="now-st ' + (st.open ? "on" : "shut") + '">' + st.text + (s.sched.odd ? '<span class="odd">不定休があります</span>' : "") + "</p>";
+    }
+    // 曜日ごとの営業時間の表。月曜から並べ、きょうの行を太くする
+    function weekTable(s) {
+      var sc = s.sched, today = jst().getDay();
+      if (!sc) return "";
+      var rows = [1, 2, 3, 4, 5, 6, 0].map(function (wd) {
+        var off = sc.off.wd.indexOf(wd) >= 0;
+        var rs = sc.hours[String(wd)] || sc.hours.d || [];
+        var txt = off ? "休み" : rs.map(function (r) { return hm(r[0]) + "〜" + (r[1] > 1440 ? "夜中の" : "") + hm(r[1]); }).join("、");
+        return '<tr' + (wd === today ? ' class="today"' : "") + '><th scope="row">' + WDN.charAt(wd) + '曜</th><td>' + txt + "</td></tr>";
+      });
+      if (sc.hours.h) rows.push('<tr><th scope="row">祝日</th><td>' + sc.hours.h.map(function (r) { return hm(r[0]) + "〜" + (r[1] > 1440 ? "夜中の" : "") + hm(r[1]); }).join("、") + "</td></tr>");
+      return '<table class="week">' + rows.join("") + "</table>";
     }
 
     function showHome() {
@@ -342,17 +400,27 @@
       lift();
     }
 
+    function photoStrip(s) {
+      var ps = s.photos || [];
+      var gq = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(s.name + " " + (s.address || s.area || ""));
+      if (!ps.length) return '<a class="nophoto" href="' + esc(gq) + '" target="_blank" rel="noopener">' + icon("images") + '<span>写真はまだありません。Googleマップで写真を見る</span></a>';
+      return '<ul class="photos-s">' + ps.map(function (p) {
+        return '<li><a href="' + esc(p.page) + '" target="_blank" rel="noopener"><img src="' + esc(p.thumb) + '" alt="' + esc(s.name) + 'の写真" loading="lazy" referrerpolicy="no-referrer"></a>' +
+          '<span class="credit">' + (p.date ? esc(p.date.replace(/^(\d{4})-0?(\d{1,2}).*$/, "$1年$2月")) + "に撮影。" : "") + '写真は' + esc(p.artist || "撮った人の名前なし") + '、' + (p.licenseUrl ? '<a href="' + esc(p.licenseUrl) + '" target="_blank" rel="noopener">' + esc(p.license) + "</a>" : esc(p.license)) + "</span></li>";
+      }).join("") + '</ul>' + '<a class="morephoto" href="' + esc(gq) + '" target="_blank" rel="noopener">Googleマップでほかの写真を見る</a>';
+    }
+
     function showSento(s) {
       current = s; mark(s);
       var nx = sento[s.next[0]];
       var gmap = "https://www.google.com/maps/dir/?api=1&destination=" + s.la + "," + s.lo;
-      var html = head("銭湯") +
+      var html = head("銭湯") + photoStrip(s) +
         '<h2 class="name">' + esc(s.name) + '</h2>' +
         (s.kana ? '<p class="kana">' + esc(s.kana) + '</p>' : "") +
         '<p class="area">' + esc(s.area || "都の外") + '</p>' +
         (s.paused ? '<p class="paused-note">組合の一覧で、休業中になっています。10分圏の数には入れていません。</p>' : "") +
         ((s.types || []).length ? '<ul class="tchips">' + s.types.map(function (id) { var t = typeById[id]; return '<li>' + icon(t.icon) + esc(t.name) + '</li>'; }).join("") + '</ul>' : "") +
-        openNow(s) +
+        statusLine(s) +
         '<div class="acts">' +
         '<a class="act primary" href="' + gmap + '" target="_blank" rel="noopener"><span class="act-i">' + icon("navigation") + '</span>経路を見る</a>' +
         (s.src === "tokyo"
@@ -363,8 +431,10 @@
       if (s.src === "tokyo") {
         var info = [
           ["map-pin", "住所", esc(s.address)],
-          ["clock", "営業時間", esc(s.hours)],
-          ["calendar-x", "休み", esc(s.closed)],
+          ["clock", "営業時間", s.sched
+            ? '<details class="hours"><summary>' + esc(s.hours) + '</summary>' + weekTable(s) + '<p class="note">休み: ' + esc(s.closed) + "</p></details>"
+            : esc(s.hours)],
+          ["calendar-x", "休み", s.sched ? "" : esc(s.closed)],
           ["train-front", "行き方", esc(s.access)],
           ["phone", "電話", s.tel ? '<a href="tel:' + esc(s.tel.replace(/[^\d+]/g, "")) + '">' + esc(s.tel) + "</a>" : ""],
           ["globe", "公式ページ", (s.links || []).map(function (l) { return /^https?:\/\//.test(l[1]) ? '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + esc(l[0]) + "</a>" : ""; }).join("、")]
@@ -427,7 +497,7 @@
       var h = decodeURIComponent(location.hash.slice(1)), m;
       var f = (m = h.match(/^t=(.+)$/)) && typeById[m[1]] ? m[1] : null;
       if (f !== filter) { filter = f; restyle(); }
-      document.querySelectorAll(".chip").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.type === filter ? "true" : "false"); });
+      document.querySelectorAll(".chip[data-type]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.type === filter ? "true" : "false"); });
       if ((m = h.match(/^s=(.+)$/)) && byId[m[1]]) return showSento(byId[m[1]]);
       if ((m = h.match(/^q=(.+)$/))) { if (input.value !== m[1]) input.value = m[1]; $("clear").hidden = false; return showResults(m[1]); }
       if (f) return showType(f);
@@ -452,11 +522,19 @@
     });
 
     // 上のボタンで、タイプを絞る。もう一度押すと全部に戻る
-    $("chips").innerHTML = types.map(function (t) {
+    $("chips").innerHTML = '<button class="chip open-chip" type="button" aria-pressed="false" data-open>' + icon("clock") + 'いま営業中</button>' + types.map(function (t) {
       return '<button class="chip" type="button" aria-pressed="false" data-type="' + t.id + '">' + icon(t.icon) + esc(t.name) + '</button>';
     }).join("");
     $("chips").addEventListener("click", function (ev) {
       var b = ev.target.closest(".chip");
+      if (b && b.hasAttribute("data-open")) {
+        openOnly = !openOnly;
+        b.setAttribute("aria-pressed", openOnly ? "true" : "false");
+        restyle();
+        var n = sento.filter(function (x) { var st = status(x); return st && st.open; }).length;
+        toast(openOnly ? "いま営業中の銭湯は" + n + "軒です" : "すべての銭湯を出しています");
+        return;
+      }
       if (b) go(b.dataset.type === filter ? "" : "t=" + b.dataset.type);
     });
 
@@ -499,6 +577,7 @@
       }, { enableHighAccuracy: true, timeout: 10000 });
     });
 
+    setInterval(function () { if (openOnly) restyle(); }, 60000);
     draw();
     placeCtrls();
     var h0 = hidden();
