@@ -496,6 +496,8 @@ if (ROOT / 'data/map/summary.json').exists():
   <button class="icon-btn" type="submit" aria-label="さがす"><i data-lucide="search"></i></button>
 </form>
 <div class="chips" id="chips" role="group" aria-label="地図の銭湯を絞りこむ"></div>
+<div class="applied" id="applied" role="group" aria-label="選んでいる条件" hidden></div>
+<button class="area-btn" id="area" type="button" hidden><i data-lucide="search"></i>このあたりの銭湯を見る</button>
 <aside class="sheet" id="sheet" data-state="half" aria-label="銭湯のくわしい中身">
   <div class="grab" id="grab"><span class="handle"></span><span class="sr">上下に動かすと、欄の高さが変わります</span></div>
   <div class="sheet-body" id="body" tabindex="-1"><p class="loading">地図のデータを読みこんでいます。</p></div>

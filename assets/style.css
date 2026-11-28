@@ -474,3 +474,53 @@ details.hours summary::marker { color: var(--sub); }
 .k-out { background: linear-gradient(90deg, rgba(var(--cover-out), 0.25), rgba(var(--cover-out), 0.7)); }
 @media (min-width: 760px) { .legend-card { right: 64px; bottom: var(--s8); } }
 @media (max-width: 420px) { .chip:not(.filter-chip) svg { display: none; } .chip { padding: 0 var(--s3); } }
+
+/* ---------- 磨き直し（2026-11-28。参考: Google マップ、Apple マップ、Airbnb、Baymard、英国労働年金省） ---------- */
+/* 文字は欄の中で 3 つ: 見出し 17px、本文 15px、補足 13px。名前と大きな数だけ別 */
+.sheet-body h2 { font-size: var(--t-m); }
+.sheet-body h2.name { font-size: var(--t-l); }
+.sheet-body h3 { font-size: var(--t-m); }
+.blk { margin-top: var(--s6); padding-top: var(--s5); }
+/* 上のボタン: 高さ 40px（Apple マップ 38px、Airbnb 40px を測った値） */
+.chip { height: var(--s10); padding: 0 var(--s4); font-size: var(--t-s); border-radius: var(--s5); }
+.chip svg { width: 18px; height: 18px; }
+.filter-chip { margin-right: var(--s1); }
+.filter-chip + .chip { position: relative; margin-left: var(--s3); }
+.filter-chip + .chip::before { content: ""; position: absolute; left: calc(var(--s2) * -1 - 1px); top: var(--s2); bottom: var(--s2); width: 1px; background: var(--grout); }
+.chips { top: 68px; }
+/* 選んでいる条件の帯 */
+.applied { position: fixed; z-index: 1040; top: 116px; left: 0; right: 0; display: flex; gap: var(--s2); padding: 0 var(--s3) var(--s2); overflow-x: auto; scrollbar-width: none; }
+.applied::-webkit-scrollbar { display: none; }
+.ach { appearance: none; flex: none; display: inline-flex; align-items: center; gap: var(--s1); height: var(--s8); padding: 0 var(--s2) 0 var(--s3); border: 0; border-radius: var(--s4); background: var(--noren); color: var(--paper); font: inherit; font-size: var(--t-xs); font-weight: 700; box-shadow: var(--shadow-1); cursor: pointer; white-space: nowrap; }
+.ach svg { width: 14px; height: 14px; }
+.ach.clear { background: var(--paper); color: var(--blue); padding: 0 var(--s3); }
+/* このあたりの銭湯を見る */
+.area-btn { position: fixed; z-index: 1030; top: 120px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: var(--s2); height: var(--s10); padding: 0 var(--s4); border: 0; border-radius: var(--s5); background: var(--paper); color: var(--blue); font: inherit; font-size: var(--t-s); font-weight: 700; box-shadow: var(--shadow-2); cursor: pointer; white-space: nowrap; }
+.area-btn svg { width: 18px; height: 18px; }
+.applied:not([hidden]) ~ .area-btn { top: 164px; }
+/* 値つきの印 */
+.vpill span { display: inline-block; padding: 2px var(--s2); border-radius: var(--s3); background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; white-space: nowrap; box-shadow: var(--shadow-1); cursor: pointer; }
+.vpill span:hover { background: var(--noren); color: var(--paper); }
+/* 欄の頭: 戻ると閉じる */
+.vh { margin-right: calc(var(--s2) * -1); }
+.vh span { flex: 1; }
+.vh .close { margin-left: auto; }
+/* 結果を文で言う */
+.fsen { margin-top: var(--s1); font-family: var(--maru); font-weight: 700; font-size: var(--t-m); line-height: 1.5; }
+.fsen b { font-size: var(--t-l); color: var(--blue); font-variant-numeric: tabular-nums; margin: 0 2px; }
+/* 地図の見方: 3 段の名前 */
+.lg-sub { margin-top: var(--s2); color: var(--sub); }
+.lg-steps { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1) var(--s3); }
+.legend-card .lg-steps i { width: var(--s5); height: var(--s3); border-radius: 2px; }
+.st1 { background: rgba(var(--cover-in), 0.1); outline: 1px solid rgba(var(--cover-in), 0.3); }
+.st2 { background: rgba(var(--cover-in), 0.22); }
+.st3 { background: rgba(var(--cover-in), 0.38); }
+.st0 { background: linear-gradient(90deg, rgba(var(--cover-out), 0.25), rgba(var(--cover-out), 0.7)); }
+@media (min-width: 760px) {
+  .chips { top: var(--s3); }
+  .applied { top: 64px; left: 400px; right: var(--s3); padding: 0 var(--s3); }
+  .area-btn { top: 72px; left: calc(400px + (100% - 400px) / 2); }
+  .applied:not([hidden]) ~ .area-btn { top: 112px; }
+}
+@media (max-width: 420px) { .chip { font-size: var(--t-xs); padding: 0 var(--s3); } }
+@media (max-width: 420px) { .filter-chip { margin-right: 0; } .filter-chip + .chip { margin-left: 0; } .filter-chip + .chip::before { display: none; } .chips { gap: 6px; } }
